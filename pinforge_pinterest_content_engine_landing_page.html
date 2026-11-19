@@ -1,0 +1,2515 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PinForge — Платформа для системной работы с Pinterest</title>
+  <meta name="description" content="PinForge объединяет планирование подборок с референсами, редактуру отдельных пинов и отказоустойчивую публикацию по расписанию в Pinterest." />
+
+  <!-- Google Fonts: Golos Text, Cormorant Garamond (italic accent), JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500;1,600&family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN for responsive grid & spacing utilities -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Golos Text"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ==========================================================================
+       PINFORGE DESIGN SYSTEM — SWISS EDITORIAL / ARCHITECTURAL STUDIO
+       ========================================================================== */
+    :root,
+    [data-theme="light"] {
+      --bg-page: #F7F6F2;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #EFEDE7;
+      --border: #E2DFD7;
+      --border-strong: #C9C5BA;
+      --ink: #141413;
+      --ink-muted: #68665F;
+      --ink-faint: #96938A;
+      --crimson: #D92D3B;
+      --crimson-hover: #B81F2C;
+      --crimson-tint: rgba(217, 45, 59, 0.07);
+      --crimson-border: rgba(217, 45, 59, 0.28);
+
+      /* Inverted Pro Card (Light Mode) */
+      --pro-bg: #141413;
+      --pro-ink: #F7F6F2;
+      --pro-muted: #A6A39B;
+      --pro-border: #2A2926;
+      --pro-btn-bg: #F7F6F2;
+      --pro-btn-ink: #141413;
+      --pro-btn-hover: #E6E3DA;
+
+      /* Primary Dark Action Button */
+      --btn-bg: #141413;
+      --btn-ink: #F7F6F2;
+      --btn-hover: #2C2B28;
+    }
+
+    [data-theme="dark"] {
+      --bg-page: #0E0E0D;
+      --bg-surface: #161614;
+      --bg-subtle: #1C1C19;
+      --border: #282824;
+      --border-strong: #3B3B35;
+      --ink: #F2F0EA;
+      --ink-muted: #8E8B82;
+      --ink-faint: #63615A;
+      --crimson: #E5484D;
+      --crimson-hover: #F25C61;
+      --crimson-tint: rgba(229, 72, 77, 0.11);
+      --crimson-border: rgba(229, 72, 77, 0.34);
+
+      /* Featured Pro Card (Dark Mode: crisp elevated surface + top crimson rule) */
+      --pro-bg: #1C1C19;
+      --pro-ink: #F2F0EA;
+      --pro-muted: #9D9A90;
+      --pro-border: #3B3B35;
+      --pro-btn-bg: #F2F0EA;
+      --pro-btn-ink: #0E0E0D;
+      --pro-btn-hover: #DBD8CF;
+
+      /* Primary Action Button (Dark Mode) */
+      --btn-bg: #F2F0EA;
+      --btn-ink: #0E0E0D;
+      --btn-hover: #DCD9D0;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-page);
+      color: var(--ink);
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--bg-page);
+      color: var(--ink);
+      font-family: "Golos Text", -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background-color 150ms ease, color 150ms ease;
+      overflow-x: hidden;
+    }
+
+    ::selection {
+      background-color: var(--crimson);
+      color: #FFFFFF;
+    }
+
+    /* Typography Helpers */
+    .display-h1 {
+      letter-spacing: -0.03em;
+      line-height: 1.04;
+    }
+
+    .display-h2 {
+      letter-spacing: -0.025em;
+      line-height: 1.12;
+    }
+
+    .serif-accent {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-style: italic;
+      font-weight: 600;
+      font-size: 1.08em;
+      letter-spacing: -0.015em;
+      padding-right: 0.04em;
+    }
+
+    .font-mono-meta {
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      letter-spacing: 0.04em;
+    }
+
+    /* Structural Hairline Tokens */
+    .hairline-b { border-bottom: 1px solid var(--border); }
+    .hairline-t { border-top: 1px solid var(--border); }
+    .hairline-all { border: 1px solid var(--border); }
+    .bg-page { background-color: var(--bg-page); }
+    .bg-surface { background-color: var(--bg-surface); }
+    .bg-subtle { background-color: var(--bg-subtle); }
+    .text-ink { color: var(--ink); }
+    .text-muted { color: var(--ink-muted); }
+    .text-faint { color: var(--ink-faint); }
+    .text-crimson { color: var(--crimson); }
+
+    /* Sharp Minimal Buttons (2px–4px radius, 150ms crisp transitions) */
+    .btn-ink {
+      background-color: var(--btn-bg);
+      color: var(--btn-ink);
+      border: 1px solid var(--btn-bg);
+      border-radius: 3px;
+      transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+    }
+    .btn-ink:hover {
+      background-color: var(--btn-hover);
+      border-color: var(--btn-hover);
+    }
+
+    .btn-hairline {
+      background-color: transparent;
+      color: var(--ink);
+      border: 1px solid var(--border-strong);
+      border-radius: 3px;
+      transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+    }
+    .btn-hairline:hover {
+      background-color: var(--bg-subtle);
+      border-color: var(--ink);
+    }
+
+    .btn-pro {
+      background-color: var(--pro-btn-bg);
+      color: var(--pro-btn-ink);
+      border: 1px solid var(--pro-btn-bg);
+      border-radius: 3px;
+      transition: background-color 150ms ease, border-color 150ms ease;
+    }
+    .btn-pro:hover {
+      background-color: var(--pro-btn-hover);
+      border-color: var(--pro-btn-hover);
+    }
+
+    /* Architectural Hairline Grid Matrix (1px shared rules without double borders) */
+    .arch-grid {
+      display: grid;
+      gap: 1px;
+      background-color: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .arch-cell {
+      background-color: var(--bg-page);
+      transition: background-color 150ms ease;
+    }
+
+    .arch-cell-surface {
+      background-color: var(--bg-surface);
+      transition: background-color 150ms ease;
+    }
+
+    /* Module List Item Active State */
+    .module-row {
+      border-left: 2px solid transparent;
+      transition: background-color 150ms ease, border-color 150ms ease;
+    }
+    .module-row:hover {
+      background-color: var(--bg-subtle);
+    }
+    .module-row[data-active="true"] {
+      background-color: var(--bg-surface);
+      border-left-color: var(--crimson);
+    }
+
+    /* Pro Featured Pricing Column */
+    .pricing-pro-col {
+      background-color: var(--pro-bg);
+      color: var(--pro-ink);
+      position: relative;
+    }
+    [data-theme="dark"] .pricing-pro-col {
+      box-shadow: inset 0 2px 0 0 var(--crimson);
+    }
+    .pricing-pro-muted {
+      color: var(--pro-muted);
+    }
+    .pricing-pro-divider {
+      border-color: var(--pro-border);
+    }
+
+    /* Accordion Crisp Grid Row Transition */
+    .faq-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 180ms ease;
+    }
+    .faq-item[data-open="true"] .faq-body {
+      grid-template-rows: 1fr;
+    }
+    .faq-inner {
+      overflow: hidden;
+    }
+    .faq-plus {
+      transition: transform 150ms ease, color 150ms ease;
+    }
+    .faq-item[data-open="true"] .faq-plus {
+      transform: rotate(45deg);
+      color: var(--crimson);
+    }
+
+    /* Inputs */
+    .editorial-input {
+      background-color: var(--bg-surface);
+      color: var(--ink);
+      border: 1px solid var(--border-strong);
+      border-radius: 3px;
+      transition: border-color 150ms ease, background-color 150ms ease;
+    }
+    .editorial-input:focus {
+      outline: none;
+      border-color: var(--ink);
+    }
+    .editorial-input::placeholder {
+      color: var(--ink-faint);
+    }
+
+    /* Modal Backdrop (solid architectural dim, no blurry glass gimmick) */
+    .modal-overlay {
+      background-color: rgba(14, 14, 13, 0.68);
+    }
+
+    /* Subtle Focus Accessibility */
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--crimson);
+      outline-offset: 2px;
+    }
+
+    /* Architecture List Scrollbar */
+    .module-scroll {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-strong) transparent;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ========================================================================
+       STICKY MINIMAL ARCHITECTURAL HEADER (NO Download Buttons, NO Glassmorphism)
+       ======================================================================== -->
+  <header class="sticky top-0 z-40 bg-page hairline-b">
+    <div class="max-w-[1280px] mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-6">
+      <!-- Left: Minimalist Geometric Logo Mark + Wordmark -->
+      <a href="#" class="flex items-center gap-3 shrink-0 group">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="1" y="1" width="22" height="22" stroke="currentColor" stroke-width="1.4" />
+          <line x1="12" y1="1" x2="12" y2="23" stroke="currentColor" stroke-width="1" opacity="0.3" />
+          <line x1="1" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="1" opacity="0.3" />
+          <rect x="6" y="6" width="6" height="6" fill="currentColor" />
+          <circle cx="17.5" cy="17.5" r="2.5" fill="var(--crimson)" />
+        </svg>
+        <span class="font-semibold text-[16px] tracking-[-0.02em] brand-name">PinForge</span>
+      </a>
+
+      <!-- Center: Clean Anchor Navigation -->
+      <nav class="hidden lg:flex items-center gap-7 text-[13.5px] font-medium text-muted" aria-label="Primary">
+        <a href="#pipeline" class="hover:text-[var(--ink)] transition-colors duration-150" data-i18n="nav.process">Процесс</a>
+        <a href="#capabilities" class="hover:text-[var(--ink)] transition-colors duration-150" data-i18n="nav.capabilities">Возможности</a>
+        <a href="#architecture" class="hover:text-[var(--ink)] transition-colors duration-150" data-i18n="nav.architecture">Архитектура</a>
+        <a href="#pricing" class="hover:text-[var(--ink)] transition-colors duration-150" data-i18n="nav.pricing">Тарифы</a>
+        <a href="#faq" class="hover:text-[var(--ink)] transition-colors duration-150" data-i18n="nav.faq">FAQ</a>
+      </nav>
+
+      <!-- Right: RU/EN Toggle, Theme Toggle, Single Sharp Dark CTA -->
+      <div class="flex items-center gap-2 sm:gap-2.5">
+        <!-- RU / EN Toggle -->
+        <button id="langToggle" type="button" class="hairline-all rounded-[3px] px-2.5 h-9 font-mono text-[11.5px] font-medium flex items-center gap-1.5 bg-surface hover:border-[var(--ink)] transition-colors duration-150" aria-label="Switch language">
+          <span id="langRuLabel">RU</span>
+          <span class="text-faint">/</span>
+          <span id="langEnLabel">EN</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button id="themeToggle" type="button" class="hairline-all rounded-[3px] w-9 h-9 flex items-center justify-center bg-surface hover:border-[var(--ink)] transition-colors duration-150" aria-label="Toggle color theme">
+          <!-- Sun (shown in dark mode) -->
+          <svg id="themeIconSun" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="square">
+            <circle cx="12" cy="12" r="4"></circle>
+            <line x1="12" y1="2" x2="12" y2="5"></line>
+            <line x1="12" y1="19" x2="12" y2="22"></line>
+            <line x1="2" y1="12" x2="5" y2="12"></line>
+            <line x1="19" y1="12" x2="22" y2="12"></line>
+            <line x1="4.93" y1="4.93" x2="7.05" y2="7.05"></line>
+            <line x1="16.95" y1="16.95" x2="19.07" y2="19.07"></line>
+            <line x1="4.93" y1="19.07" x2="7.05" y2="16.95"></line>
+            <line x1="16.95" y1="7.05" x2="19.07" y2="4.93"></line>
+          </svg>
+          <!-- Moon (shown in light mode) -->
+          <svg id="themeIconMoon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="square">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <!-- Primary Access CTA -->
+        <button type="button" onclick="openAccessModal('')" class="hidden sm:inline-flex items-center justify-center btn-ink h-9 px-4 text-[13px] font-medium" data-i18n="nav.cta">
+          Запросить доступ
+        </button>
+
+        <!-- Mobile Menu Button -->
+        <button id="mobileMenuBtn" type="button" class="lg:hidden hairline-all rounded-[3px] w-9 h-9 flex items-center justify-center bg-surface" aria-label="Menu" aria-expanded="false">
+          <svg id="menuIconOpen" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+            <line x1="3" y1="7" x2="21" y2="7"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="17" x2="21" y2="17"></line>
+          </svg>
+          <svg id="menuIconClose" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+            <line x1="5" y1="5" x2="19" y2="19"></line>
+            <line x1="19" y1="5" x2="5" y2="19"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobileMenu" class="hidden lg:hidden bg-page hairline-t">
+      <div class="max-w-[1280px] mx-auto px-5 py-5 flex flex-col gap-1">
+        <a href="#pipeline" class="mobile-link py-2.5 text-[14px] font-medium hairline-b" data-i18n="nav.process">Процесс</a>
+        <a href="#capabilities" class="mobile-link py-2.5 text-[14px] font-medium hairline-b" data-i18n="nav.capabilities">Возможности</a>
+        <a href="#architecture" class="mobile-link py-2.5 text-[14px] font-medium hairline-b" data-i18n="nav.architecture">Архитектура</a>
+        <a href="#pricing" class="mobile-link py-2.5 text-[14px] font-medium hairline-b" data-i18n="nav.pricing">Тарифы</a>
+        <a href="#faq" class="mobile-link py-2.5 text-[14px] font-medium hairline-b" data-i18n="nav.faq">FAQ</a>
+        <div class="pt-4">
+          <button type="button" onclick="openAccessModal(''); toggleMobileMenu(false);" class="w-full btn-ink py-3 text-[13.5px] font-medium" data-i18n="nav.cta">Запросить доступ</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ======================================================================
+         HERO SECTION — ASYMMETRIC SWISS EDITORIAL LAYOUT (ZERO MOCKUPS)
+         ====================================================================== -->
+    <section class="hairline-b">
+      <div class="max-w-[1280px] mx-auto px-5 sm:px-8">
+        <!-- Top Metadata Strip -->
+        <div class="py-4 hairline-b flex flex-col sm:flex-row sm:items-center justify-between gap-2 font-mono-meta text-[11px] uppercase text-muted">
+          <div class="flex items-center gap-2.5">
+            <span class="inline-block w-1.5 h-1.5 rounded-full" style="background-color: var(--crimson);"></span>
+            <span data-i18n="hero.metaLeft">PINTEREST CONTENT ENGINE · V1.0</span>
+          </div>
+          <div data-i18n="hero.metaRight">RU / EN · MULTI-ACCOUNT · OFFLINE-SAFE</div>
+        </div>
+
+        <!-- Main Asymmetric Editorial Block -->
+        <div class="py-14 sm:py-20 lg:py-24">
+          <div class="max-w-[1040px]">
+            <h1 id="heroHeadline" class="display-h1 font-semibold text-[clamp(2.35rem,5.4vw,4.5rem)] text-ink">
+              <!-- Populated by i18n with Cormorant Garamond italic accent -->
+            </h1>
+          </div>
+
+          <div class="mt-10 sm:mt-12 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-end">
+            <!-- Lead Copy & Actions -->
+            <div class="lg:col-span-7 space-y-7">
+              <p class="text-[16px] sm:text-[18px] leading-[1.6] text-muted max-w-[600px]" data-i18n="hero.lead">
+                PinForge объединяет планирование подборок с референсами, редактуру отдельных пинов и отказоустойчивую публикацию по расписанию в одном рабочем инструменте.
+              </p>
+
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <button type="button" onclick="openAccessModal('')" class="btn-ink h-12 px-6 text-[14px] font-medium inline-flex items-center justify-center gap-2" data-i18n="hero.ctaPrimary">
+                  Запросить ранний доступ
+                </button>
+                <a href="#pricing" class="btn-hairline h-12 px-6 text-[14px] font-medium inline-flex items-center justify-center gap-2" data-i18n="hero.ctaSecondary">
+                  Смотреть тарифы →
+                </a>
+              </div>
+            </div>
+
+            <!-- Quiet Architectural Spec Ledger (Right Column) -->
+            <div class="lg:col-span-5 lg:border-l lg:border-[var(--border)] lg:pl-8">
+              <dl class="space-y-3 font-mono text-[11.5px]">
+                <div class="flex items-baseline justify-between gap-4 pb-2.5 hairline-b">
+                  <dt class="text-faint uppercase" data-i18n="hero.ledger1Key">Формат работы</dt>
+                  <dd class="text-ink text-right" data-i18n="hero.ledger1Val">Серии пинов · доски · расписание</dd>
+                </div>
+                <div class="flex items-baseline justify-between gap-4 pb-2.5 hairline-b">
+                  <dt class="text-faint uppercase" data-i18n="hero.ledger2Key">Интеграция</dt>
+                  <dd class="text-ink text-right" data-i18n="hero.ledger2Val">Pinterest OAuth · контроль лимитов</dd>
+                </div>
+                <div class="flex items-baseline justify-between gap-4">
+                  <dt class="text-faint uppercase" data-i18n="hero.ledger3Key">Статус релиза</dt>
+                  <dd class="text-right flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full inline-block" style="background-color: var(--crimson);"></span>
+                    <span class="text-ink" data-i18n="hero.ledger3Val">Закрытый ранний доступ</span>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom 4-Column Architectural Spec Grid -->
+        <div class="pb-12 sm:pb-16">
+          <div class="arch-grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="arch-cell-surface p-6">
+              <div class="font-mono text-[13px] font-semibold text-ink mb-2" data-i18n="hero.m1Title">03 этапа</div>
+              <p class="text-[13.5px] leading-[1.55] text-muted" data-i18n="hero.m1Desc">Идея и план → Отбор и правка → Публикация</p>
+            </div>
+            <div class="arch-cell-surface p-6">
+              <div class="font-mono text-[13px] font-semibold text-ink mb-2" data-i18n="hero.m2Title">15 модулей</div>
+              <p class="text-[13.5px] leading-[1.55] text-muted" data-i18n="hero.m2Desc">Проработанный UX для всех сценариев и ошибок</p>
+            </div>
+            <div class="arch-cell-surface p-6">
+              <div class="font-mono text-[13px] font-semibold text-ink mb-2" data-i18n="hero.m3Title">Мультиаккаунты</div>
+              <p class="text-[13.5px] leading-[1.55] text-muted" data-i18n="hero.m3Desc">Несколько профилей и досок Pinterest с референсами</p>
+            </div>
+            <div class="arch-cell-surface p-6">
+              <div class="font-mono text-[13px] font-semibold text-ink mb-2" data-i18n="hero.m4Title">Офлайн-кэш</div>
+              <p class="text-[13.5px] leading-[1.55] text-muted" data-i18n="hero.m4Desc">Сохранение черновиков и защита от сбоев сети и лимитов</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECTION 01 — 01 / ПАЙПЛАЙН (КАК УСТРОЕН ПРОЦЕСС)
+         ====================================================================== -->
+    <section id="pipeline" class="py-20 sm:py-28 hairline-b scroll-mt-16">
+      <div class="max-w-[1280px] mx-auto px-5 sm:px-8">
+        <!-- Section Header -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end mb-12 sm:mb-14">
+          <div class="lg:col-span-7">
+            <div class="font-mono-meta text-[11.5px] uppercase text-muted mb-3 flex items-center gap-2">
+              <span class="text-crimson font-semibold">01</span>
+              <span>/</span>
+              <span data-i18n="pipeline.label">ПАЙПЛАЙН</span>
+            </div>
+            <h2 class="display-h2 font-semibold text-[clamp(1.85rem,3.4vw,2.75rem)]" data-i18n="pipeline.title">Как устроен процесс</h2>
+          </div>
+          <div class="lg:col-span-5">
+            <p class="text-[15px] leading-[1.6] text-muted" data-i18n="pipeline.subtitle">
+              Три последовательных контура без лишних экранов: вы контролируете структуру серии до генерации, правите только нужные карточки и задаёте безопасный ритм выхода.
+            </p>
+          </div>
+        </div>
+
+        <!-- 3-Column Architectural Grid with 1px Blueprint Vector Schematics -->
+        <div class="arch-grid grid-cols-1 lg:grid-cols-3">
+          <!-- Column 01 -->
+          <article class="arch-cell-surface p-7 sm:p-8 flex flex-col justify-between gap-8">
+            <div class="space-y-6">
+              <div class="flex items-center justify-between font-mono text-[11.5px] text-muted pb-4 hairline-b">
+                <span>STAGE 01</span>
+                <span data-i18n="pipeline.s1.meta">PLAN · REFS · DRAFTS</span>
+              </div>
+
+              <!-- Architectural Blueprint Schematic 01: Prompt -> Plan + Reference -> Draft Lock -->
+              <div class="py-4 px-3 bg-page hairline-all">
+                <svg viewBox="0 0 320 112" class="w-full h-auto block" fill="none" aria-hidden="true">
+                  <!-- Grid guides -->
+                  <line x1="0" y1="56" x2="320" y2="56" stroke="var(--border)" stroke-width="1" stroke-dasharray="2 3" />
+                  <!-- Prompt Node -->
+                  <rect x="16" y="34" width="64" height="44" stroke="var(--ink)" stroke-width="1.2" />
+                  <line x1="25" y1="48" x2="66" y2="48" stroke="var(--ink)" stroke-width="1" />
+                  <line x1="25" y1="57" x2="54" y2="57" stroke="var(--ink-muted)" stroke-width="1" />
+                  <line x1="25" y1="66" x2="62" y2="66" stroke="var(--ink-muted)" stroke-width="1" />
+                  <!-- Connector -->
+                  <line x1="80" y1="56" x2="118" y2="56" stroke="var(--ink)" stroke-width="1.2" />
+                  <polyline points="113,51 118,56 113,61" stroke="var(--ink)" stroke-width="1.2" />
+                  <!-- Plan Matrix -->
+                  <rect x="120" y="18" width="90" height="76" stroke="var(--ink)" stroke-width="1.2" />
+                  <line x1="120" y1="36" x2="210" y2="36" stroke="var(--border-strong)" stroke-width="1" />
+                  <line x1="120" y1="55" x2="210" y2="55" stroke="var(--border-strong)" stroke-width="1" />
+                  <line x1="120" y1="74" x2="210" y2="74" stroke="var(--border-strong)" stroke-width="1" />
+                  <circle cx="131" cy="27" r="2.2" fill="var(--ink)" />
+                  <circle cx="131" cy="46" r="2.2" fill="var(--crimson)" />
+                  <circle cx="131" cy="65" r="2.2" fill="var(--ink)" />
+                  <circle cx="131" cy="84" r="2.2" fill="var(--ink)" />
+                  <line x1="140" y1="27" x2="196" y2="27" stroke="var(--ink)" stroke-width="1" />
+                  <line x1="140" y1="46" x2="188" y2="46" stroke="var(--crimson)" stroke-width="1" />
+                  <line x1="140" y1="65" x2="198" y2="65" stroke="var(--ink)" stroke-width="1" />
+                  <line x1="140" y1="84" x2="182" y2="84" stroke="var(--ink-muted)" stroke-width="1" />
+                  <!-- Connector to Reference Stack -->
+                  <line x1="210" y1="56" x2="246" y2="56" stroke="var(--ink)" stroke-width="1.2" />
+                  <polyline points="241,51 246,56 241,61" stroke="var(--ink)" stroke-width="1.2" />
+                  <!-- Reference Frame -->
+                  <rect x="256" y="28" width="46" height="58" stroke="var(--border-strong)" stroke-width="1" />
+                  <rect x="248" y="22" width="46" height="58" fill="var(--bg-surface)" stroke="var(--ink)" stroke-width="1.2" />
+                  <line x1="248" y1="22" x2="294" y2="80" stroke="var(--border)" stroke-width="1" />
+                  <line x1="294" y1="22" x2="248" y2="80" stroke="var(--border)" stroke-width="1" />
+                </svg>
+              </div>
+
+              <div>
+                <h3 class="font-semibold text-[19px] tracking-[-0.015em] mb-2.5" data-i18n="pipeline.s1.title">01 · Бриф, план и референсы</h3>
+                <p class="text-[14.5px] leading-[1.65] text-muted" data-i18n="pipeline.s1.desc">
+                  Описание задачи в чате, выбор аккаунта и доски, загрузка визуальных референсов, утверждение и правка плана до запуска генерации, сохранение черновиков.
+                </p>
+              </div>
+            </div>
+
+            <div class="pt-4 hairline-t font-mono text-[11px] text-faint flex items-center justify-between">
+              <span data-i18n="pipeline.s1.footLeft">МОДУЛИ 06, 10</span>
+              <span data-i18n="pipeline.s1.footRight">АВТОСОХРАНЕНИЕ</span>
+            </div>
+          </article>
+
+          <!-- Column 02 -->
+          <article class="arch-cell-surface p-7 sm:p-8 flex flex-col justify-between gap-8">
+            <div class="space-y-6">
+              <div class="flex items-center justify-between font-mono text-[11.5px] text-muted pb-4 hairline-b">
+                <span>STAGE 02</span>
+                <span data-i18n="pipeline.s2.meta">CURATE · EDIT · REDRAW</span>
+              </div>
+
+              <!-- Architectural Blueprint Schematic 02: Pin Matrix + Isolated Crimson Redraw Loop -->
+              <div class="py-4 px-3 bg-page hairline-all">
+                <svg viewBox="0 0 320 112" class="w-full h-auto block" fill="none" aria-hidden="true">
+                  <!-- Grid of 3 pins -->
+                  <rect x="20" y="18" width="44" height="60" stroke="var(--ink)" stroke-width="1.2" />
+                  <polyline points="35,48 40,53 50,42" stroke="var(--ink)" stroke-width="1.2" />
+
+                  <rect x="76" y="18" width="44" height="60" stroke="var(--crimson)" stroke-width="1.4" />
+                  <circle cx="98" cy="48" r="10" stroke="var(--crimson)" stroke-width="1.2" stroke-dasharray="45 14" />
+                  <polyline points="105,39 109,43 103,45" stroke="var(--crimson)" stroke-width="1.2" />
+
+                  <rect x="132" y="18" width="44" height="60" stroke="var(--ink)" stroke-width="1.2" />
+                  <polyline points="147,48 152,53 162,42" stroke="var(--ink)" stroke-width="1.2" />
+
+                  <!-- Filter baseline -->
+                  <line x1="20" y1="92" x2="176" y2="92" stroke="var(--border-strong)" stroke-width="1" />
+                  <rect x="20" y="88" width="44" height="8" fill="var(--ink)" />
+
+                  <!-- Connector to Copy Editor -->
+                  <line x1="176" y1="48" x2="210" y2="48" stroke="var(--ink)" stroke-width="1.2" />
+                  <polyline points="205,43 210,48 205,53" stroke="var(--ink)" stroke-width="1.2" />
+
+                  <!-- Copy & Metadata Inspector -->
+                  <rect x="212" y="18" width="88" height="76" stroke="var(--ink)" stroke-width="1.2" />
+                  <line x1="224" y1="34" x2="286" y2="34" stroke="var(--ink)" stroke-width="1.4" />
+                  <line x1="224" y1="47" x2="274" y2="47" stroke="var(--ink-muted)" stroke-width="1" />
+                  <line x1="224" y1="56" x2="282" y2="56" stroke="var(--ink-muted)" stroke-width="1" />
+                  <line x1="224" y1="65" x2="262" y2="65" stroke="var(--ink-muted)" stroke-width="1" />
+                  <rect x="224" y="76" width="38" height="9" stroke="var(--border-strong)" stroke-width="1" />
+                </svg>
+              </div>
+
+              <div>
+                <h3 class="font-semibold text-[19px] tracking-[-0.015em] mb-2.5" data-i18n="pipeline.s2.title">02 · Отбор и точечная правка</h3>
+                <p class="text-[14.5px] leading-[1.65] text-muted" data-i18n="pipeline.s2.desc">
+                  Просмотр сеткой или по одному, фильтрация, детальная редактура заголовков и описаний, перерисовка отдельных неудачных вариантов без перезапуска всей серии.
+                </p>
+              </div>
+            </div>
+
+            <div class="pt-4 hairline-t font-mono text-[11px] text-faint flex items-center justify-between">
+              <span data-i18n="pipeline.s2.footLeft">МОДУЛИ 07, 09</span>
+              <span data-i18n="pipeline.s2.footRight">ТОЧЕЧНАЯ ПЕРЕРИСОВКА</span>
+            </div>
+          </article>
+
+          <!-- Column 03 -->
+          <article class="arch-cell-surface p-7 sm:p-8 flex flex-col justify-between gap-8">
+            <div class="space-y-6">
+              <div class="flex items-center justify-between font-mono text-[11.5px] text-muted pb-4 hairline-b">
+                <span>STAGE 03</span>
+                <span data-i18n="pipeline.s3.meta">CADENCE · UNDO · LIMITS</span>
+              </div>
+
+              <!-- Architectural Blueprint Schematic 03: Rate-Limit Ceiling + Spaced Slots + Undo Window -->
+              <div class="py-4 px-3 bg-page hairline-all">
+                <svg viewBox="0 0 320 112" class="w-full h-auto block" fill="none" aria-hidden="true">
+                  <!-- Rate-limit ceiling rule -->
+                  <line x1="18" y1="26" x2="302" y2="26" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="3 3" />
+                  <!-- Main timeline axis -->
+                  <line x1="18" y1="68" x2="302" y2="68" stroke="var(--ink)" stroke-width="1.2" />
+                  <!-- Undo window highlight at T0 -->
+                  <rect x="26" y="54" width="38" height="28" stroke="var(--crimson)" stroke-width="1.2" fill="var(--crimson-tint)" />
+                  <circle cx="45" cy="68" r="3.2" fill="var(--crimson)" />
+                  <!-- Spaced publication slots -->
+                  <line x1="108" y1="38" x2="108" y2="68" stroke="var(--ink)" stroke-width="1.2" />
+                  <rect x="103" y="34" width="10" height="10" fill="var(--ink)" />
+                  <circle cx="108" cy="68" r="2.5" fill="var(--ink)" />
+
+                  <line x1="168" y1="42" x2="168" y2="68" stroke="var(--ink)" stroke-width="1.2" />
+                  <rect x="163" y="38" width="10" height="10" stroke="var(--ink)" stroke-width="1.2" fill="var(--bg-surface)" />
+                  <circle cx="168" cy="68" r="2.5" fill="var(--ink)" />
+
+                  <line x1="228" y1="38" x2="228" y2="68" stroke="var(--ink)" stroke-width="1.2" />
+                  <rect x="223" y="34" width="10" height="10" stroke="var(--ink)" stroke-width="1.2" fill="var(--bg-surface)" />
+                  <circle cx="228" cy="68" r="2.5" fill="var(--ink)" />
+
+                  <line x1="288" y1="44" x2="288" y2="68" stroke="var(--ink)" stroke-width="1.2" />
+                  <rect x="283" y="40" width="10" height="10" stroke="var(--ink)" stroke-width="1.2" fill="var(--bg-surface)" />
+                  <circle cx="288" cy="68" r="2.5" fill="var(--ink)" />
+
+                  <!-- Interval brackets -->
+                  <path d="M108 82 V88 H168 V82" stroke="var(--ink-muted)" stroke-width="1" />
+                  <path d="M168 82 V88 H228 V82" stroke="var(--ink-muted)" stroke-width="1" />
+                  <path d="M228 82 V88 H288 V82" stroke="var(--ink-muted)" stroke-width="1" />
+                </svg>
+              </div>
+
+              <div>
+                <h3 class="font-semibold text-[19px] tracking-[-0.015em] mb-2.5" data-i18n="pipeline.s3.title">03 · Гибкая публикация и контроль</h3>
+                <p class="text-[14.5px] leading-[1.65] text-muted" data-i18n="pipeline.s3.desc">
+                  Мгновенный постинг, растягивание серии по времени или выбор точной даты, окно отмены перед отправкой, перенос времени и контроль лимитов Pinterest.
+                </p>
+              </div>
+            </div>
+
+            <div class="pt-4 hairline-t font-mono text-[11px] text-faint flex items-center justify-between">
+              <span data-i18n="pipeline.s3.footLeft">МОДУЛИ 08, 11</span>
+              <span data-i18n="pipeline.s3.footRight">ЗАЩИТА ОТ ЛИМИТОВ</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECTION 02 — 02 / ВОЗМОЖНОСТИ (ИНЖЕНЕРНАЯ ПРОРАБОТКА — SPEC ROWS)
+         ====================================================================== -->
+    <section id="capabilities" class="py-20 sm:py-28 hairline-b scroll-mt-16">
+      <div class="max-w-[1280px] mx-auto px-5 sm:px-8">
+        <!-- Section Header -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end mb-12 sm:mb-14">
+          <div class="lg:col-span-7">
+            <div class="font-mono-meta text-[11.5px] uppercase text-muted mb-3 flex items-center gap-2">
+              <span class="text-crimson font-semibold">02</span>
+              <span>/</span>
+              <span data-i18n="capabilities.label">ВОЗМОЖНОСТИ</span>
+            </div>
+            <h2 class="display-h2 font-semibold text-[clamp(1.85rem,3.4vw,2.75rem)]" data-i18n="capabilities.title">Инженерная проработка</h2>
+          </div>
+          <div class="lg:col-span-5">
+            <p class="text-[15px] leading-[1.6] text-muted" data-i18n="capabilities.subtitle">
+              Спецификация ключевых механизмов PinForge: каждый элемент интерфейса решает прикладную задачу производства и защиты контента.
+            </p>
+          </div>
+        </div>
+
+        <!-- Structured Two-Column Specification Ledger (1px horizontal dividers) -->
+        <div id="capabilitiesList" class="hairline-t">
+          <!-- Populated dynamically via JS for full RU/EN parity -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECTION 03 — 03 / АРХИТЕКТУРА · 15 МОДУЛЕЙ (SYSTEM SPEC EXPLORER)
+         ====================================================================== -->
+    <section id="architecture" class="py-20 sm:py-28 hairline-b scroll-mt-16">
+      <div class="max-w-[1280px] mx-auto px-5 sm:px-8">
+        <!-- Section Header -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end mb-10">
+          <div class="lg:col-span-7">
+            <div class="font-mono-meta text-[11.5px] uppercase text-muted mb-3 flex items-center gap-2">
+              <span class="text-crimson font-semibold">03</span>
+              <span>/</span>
+              <span data-i18n="arch.label">АРХИТЕКТУРА · 15 МОДУЛЕЙ</span>
+            </div>
+            <h2 class="display-h2 font-semibold text-[clamp(1.85rem,3.4vw,2.75rem)]" data-i18n="arch.title">Карта архитектуры продукта</h2>
+          </div>
+          <div class="lg:col-span-5">
+            <p class="text-[15px] leading-[1.6] text-muted" data-i18n="arch.subtitle">
+              Полная спецификация экранов и системных состояний: для каждого из 15 модулей зафиксирован основной сценарий и обработка крайних случаев.
+            </p>
+          </div>
+        </div>
+
+        <!-- Category Filter Bar (Sharp Hairline Pills) -->
+        <div id="archFilterBar" class="flex flex-wrap items-center gap-2 mb-6" role="tablist">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- Split Specification Explorer -->
+        <div class="arch-grid grid-cols-1 lg:grid-cols-12 items-start">
+          <!-- Left Column: Numbered Module Index (01–15) -->
+          <div class="lg:col-span-5 bg-page">
+            <div class="px-5 py-3 hairline-b flex items-center justify-between font-mono text-[11px] uppercase text-faint bg-subtle">
+              <span data-i18n="arch.indexCol">ИНДЕКС МОДУЛЕЙ</span>
+              <span id="archVisibleCount">15 / 15</span>
+            </div>
+            <div id="archModuleList" class="divide-y divide-[var(--border)] lg:max-h-[580px] lg:overflow-y-auto module-scroll">
+              <!-- Populated dynamically via JS -->
+            </div>
+          </div>
+
+          <!-- Right Column: Sticky Specification Detail Sheet -->
+          <div class="lg:col-span-7 bg-surface lg:sticky lg:top-16 min-h-[420px] flex flex-col justify-between">
+            <div id="archDetailSheet" class="p-6 sm:p-9">
+              <!-- Populated dynamically via JS -->
+            </div>
+            <!-- Prev / Next Module Footer Bar -->
+            <div class="px-6 sm:px-9 py-4 hairline-t bg-page flex items-center justify-between gap-4">
+              <button type="button" id="archPrevBtn" onclick="stepModule(-1)" class="btn-hairline px-3.5 py-2 font-mono text-[11.5px] inline-flex items-center gap-2">
+                <span>←</span>
+                <span data-i18n="arch.prev">Предыдущий</span>
+              </button>
+              <span id="archPosIndicator" class="font-mono text-[11.5px] text-faint">01 / 15</span>
+              <button type="button" id="archNextBtn" onclick="stepModule(1)" class="btn-hairline px-3.5 py-2 font-mono text-[11.5px] inline-flex items-center gap-2">
+                <span data-i18n="arch.next">Следующий</span>
+                <span>→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECTION 04 — 04 / ТАРИФЫ (ELEVATED SAAS PRICING)
+         ====================================================================== -->
+    <section id="pricing" class="py-20 sm:py-28 hairline-b scroll-mt-16">
+      <div class="max-w-[1280px] mx-auto px-5 sm:px-8">
+        <!-- Section Header + Billing Toggle -->
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-12 sm:mb-14">
+          <div class="max-w-2xl">
+            <div class="font-mono-meta text-[11.5px] uppercase text-muted mb-3 flex items-center gap-2">
+              <span class="text-crimson font-semibold">04</span>
+              <span>/</span>
+              <span data-i18n="pricing.label">ТАРИФЫ</span>
+            </div>
+            <h2 class="display-h2 font-semibold text-[clamp(1.85rem,3.4vw,2.75rem)] mb-3" data-i18n="pricing.title">Тарифы для авторов и студий</h2>
+            <p class="text-[15px] leading-[1.6] text-muted" data-i18n="pricing.subtitle">
+              Прозрачные квоты под регулярное производство серий в Pinterest. Без скрытых доплат за базовые функции безопасности и кэша.
+            </p>
+          </div>
+
+          <!-- Clean Segmented Billing Toggle -->
+          <div class="inline-flex items-center hairline-all rounded-[3px] p-1 bg-surface self-start lg:self-end">
+            <button type="button" id="billMonthlyBtn" onclick="setBilling('monthly')" class="px-4 py-2 text-[13px] font-medium rounded-[2px] transition-colors duration-150" data-i18n="pricing.monthly">
+              Помесячно
+            </button>
+            <button type="button" id="billYearlyBtn" onclick="setBilling('yearly')" class="px-4 py-2 text-[13px] font-medium rounded-[2px] transition-colors duration-150 inline-flex items-center gap-2">
+              <span data-i18n="pricing.yearly">Ежегодно</span>
+              <span class="font-mono text-[11px] font-semibold text-crimson">—20%</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3 Architectural Pricing Columns -->
+        <div id="pricingGrid" class="arch-grid grid-cols-1 lg:grid-cols-3">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- Subtle Billing Footnote -->
+        <div class="mt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 font-mono text-[11.5px] text-faint">
+          <span data-i18n="pricing.noteLeft">Все тарифы включают OAuth-подключение Pinterest, офлайн-кэш и переключение RU / EN.</span>
+          <span id="pricingCurrencyNote"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECTION 05 — 05 / ВОПРОСЫ (MINIMALIST ACCORDION)
+         ====================================================================== -->
+    <section id="faq" class="py-20 sm:py-28 hairline-b scroll-mt-16">
+      <div class="max-w-[1280px] mx-auto px-5 sm:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
+          <!-- Left Sticky Intro -->
+          <div class="lg:col-span-4">
+            <div class="lg:sticky lg:top-24">
+              <div class="font-mono-meta text-[11.5px] uppercase text-muted mb-3 flex items-center gap-2">
+                <span class="text-crimson font-semibold">05</span>
+                <span>/</span>
+                <span data-i18n="faq.label">ВОПРОСЫ</span>
+              </div>
+              <h2 class="display-h2 font-semibold text-[clamp(1.85rem,3vw,2.45rem)] mb-4" data-i18n="faq.title">Частые вопросы</h2>
+              <p class="text-[14.5px] leading-[1.6] text-muted" data-i18n="faq.subtitle">
+                Коротко о безопасности подключения, обработке сбоев, референсах досок и условиях оплаты.
+              </p>
+            </div>
+          </div>
+
+          <!-- Right Accordion List -->
+          <div id="faqList" class="lg:col-span-8 hairline-t">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         SECTION 06 — 06 / ДОСТУП (INLINE WAITLIST & EARLY ACCESS FORM)
+         ====================================================================== -->
+    <section id="access" class="py-20 sm:py-28 hairline-b">
+      <div class="max-w-[1280px] mx-auto px-5 sm:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+          <div class="lg:col-span-6 space-y-4">
+            <div class="font-mono-meta text-[11.5px] uppercase text-muted flex items-center gap-2">
+              <span class="text-crimson font-semibold">06</span>
+              <span>/</span>
+              <span data-i18n="access.label">РАННИЙ ДОСТУП</span>
+            </div>
+            <h2 class="display-h2 font-semibold text-[clamp(1.9rem,3.4vw,2.75rem)]" data-i18n="access.title">Получить доступ к PinForge</h2>
+            <p class="text-[15.5px] leading-[1.65] text-muted max-w-lg" data-i18n="access.subtitle">
+              Оставьте рабочий e-mail и выберите подходящий тариф. Мы подключаем новые аккаунты и студии волнами, чтобы гарантировать стабильные лимиты генерации.
+            </p>
+          </div>
+
+          <div class="lg:col-span-6 bg-surface hairline-all p-6 sm:p-8">
+            <form id="inlineAccessForm" onsubmit="handleWaitlistSubmit(event, 'inline')" novalidate class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="inlineEmail" class="block font-mono text-[11px] uppercase text-muted mb-1.5" data-i18n="form.emailLabel">Рабочий e-mail *</label>
+                  <input id="inlineEmail" type="email" required class="editorial-input w-full h-11 px-3.5 text-[14px]" placeholder="name@studio.com" />
+                </div>
+                <div>
+                  <label for="inlinePlan" class="block font-mono text-[11px] uppercase text-muted mb-1.5" data-i18n="form.planLabel">Интересующий тариф</label>
+                  <select id="inlinePlan" class="editorial-input w-full h-11 px-3 text-[14px]">
+                    <option value="Creator">Creator</option>
+                    <option value="Pro" selected>Pro</option>
+                    <option value="Studio">Studio</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+                <button type="submit" id="inlineSubmitBtn" class="btn-ink h-11 px-6 text-[13.5px] font-medium shrink-0" data-i18n="form.submit">
+                  Запросить доступ
+                </button>
+                <span class="font-mono text-[11px] text-faint" data-i18n="form.note">Без спама · приглашение по готовности слота</span>
+              </div>
+
+              <div id="inlineFeedback" class="hidden pt-3 hairline-t text-[13.5px] font-medium" role="status" aria-live="polite"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================
+       MINIMALIST ARCHITECTURAL FOOTER (NO App Store / Google Play links)
+       ======================================================================== -->
+  <footer class="py-12 bg-page">
+    <div class="max-w-[1280px] mx-auto px-5 sm:px-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 pb-8 hairline-b">
+        <!-- Brand -->
+        <div class="flex items-center gap-3">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="1" y="1" width="22" height="22" stroke="currentColor" stroke-width="1.5" />
+            <rect x="6" y="6" width="6" height="6" fill="currentColor" />
+            <circle cx="17.5" cy="17.5" r="2.5" fill="var(--crimson)" />
+          </svg>
+          <span class="font-semibold text-[15px] tracking-[-0.02em] brand-name">PinForge</span>
+          <span class="font-mono text-[11px] text-faint ml-2">v1.0</span>
+        </div>
+
+        <!-- Links -->
+        <div class="flex flex-wrap items-center gap-x-7 gap-y-2.5 text-[13.5px] text-muted">
+          <a href="#pipeline" class="hover:text-[var(--ink)] transition-colors duration-150" data-i18n="nav.process">Процесс</a>
+          <a href="#capabilities" class="hover:text-[var(--ink)] transition-colors duration-150" data-i18n="nav.capabilities">Возможности</a>
+          <a href="#architecture" class="hover:text-[var(--ink)] transition-colors duration-150" data-i18n="nav.architecture">Архитектура</a>
+          <a href="#pricing" class="hover:text-[var(--ink)] transition-colors duration-150" data-i18n="nav.pricing">Тарифы</a>
+          <a href="#faq" class="hover:text-[var(--ink)] transition-colors duration-150" data-i18n="nav.faq">FAQ</a>
+        </div>
+
+        <!-- External / Utility -->
+        <div class="flex flex-wrap items-center gap-5 font-mono text-[12px] text-muted">
+          <a id="footerGithub" href="#" target="_blank" rel="noopener noreferrer" class="hover:text-[var(--ink)] transition-colors duration-150">GitHub ↗</a>
+          <a id="footerEmail" href="#" class="hover:text-[var(--ink)] transition-colors duration-150">hello@pinforge.studio</a>
+          <button type="button" onclick="toggleLanguage()" class="hairline-all rounded-[2px] px-2 py-1 text-[11px] hover:border-[var(--ink)] transition-colors duration-150" id="footerLangToggle">RU / EN</button>
+        </div>
+      </div>
+
+      <div class="pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-[11.5px] text-faint">
+        <p id="footerCopy">© 2026 PinForge. Все права защищены.</p>
+        <p data-i18n="footer.disclaimer">Не является аффилированным продуктом Pinterest, Inc.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================================================
+       WAITLIST / EARLY ACCESS MODAL (Accessible, Pre-filled Tier, No alert())
+       ======================================================================== -->
+  <div id="accessModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay" role="dialog" aria-modal="true" aria-labelledby="accessModalTitle">
+    <div class="bg-surface hairline-all rounded-[4px] max-w-[480px] w-full p-6 sm:p-8 relative">
+      <div class="flex items-start justify-between gap-4 pb-5 hairline-b mb-6">
+        <div>
+          <div class="font-mono text-[11px] uppercase text-crimson mb-1.5" data-i18n="modal.eyebrow">PINFORGE · РАННИЙ ДОСТУП</div>
+          <h3 id="accessModalTitle" class="font-semibold text-[21px] tracking-[-0.02em]" data-i18n="modal.title">Запросить доступ</h3>
+        </div>
+        <button type="button" id="modalCloseBtn" onclick="closeAccessModal()" class="hairline-all rounded-[3px] w-8 h-8 flex items-center justify-center text-muted hover:text-[var(--ink)] hover:border-[var(--ink)] transition-colors duration-150" aria-label="Close">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <form id="modalAccessForm" onsubmit="handleWaitlistSubmit(event, 'modal')" novalidate class="space-y-4">
+        <div>
+          <label for="modalName" class="block font-mono text-[11px] uppercase text-muted mb-1.5" data-i18n="form.nameLabel">Имя или название студии</label>
+          <input id="modalName" type="text" class="editorial-input w-full h-11 px-3.5 text-[14px]" data-i18n-placeholder="form.namePlaceholder" placeholder="Алина / Studio Nord" />
+        </div>
+
+        <div>
+          <label for="modalEmail" class="block font-mono text-[11px] uppercase text-muted mb-1.5" data-i18n="form.emailLabel">Рабочий e-mail *</label>
+          <input id="modalEmail" type="email" required class="editorial-input w-full h-11 px-3.5 text-[14px]" placeholder="name@studio.com" />
+        </div>
+
+        <div>
+          <label for="modalPlan" class="block font-mono text-[11px] uppercase text-muted mb-1.5" data-i18n="form.planLabel">Интересующий тариф</label>
+          <select id="modalPlan" class="editorial-input w-full h-11 px-3 text-[14px]">
+            <option value="Creator">Creator</option>
+            <option value="Pro">Pro</option>
+            <option value="Studio">Studio</option>
+          </select>
+        </div>
+
+        <div class="pt-2">
+          <button type="submit" id="modalSubmitBtn" class="w-full btn-ink h-11 text-[14px] font-medium" data-i18n="form.submit">
+            Запросить доступ
+          </button>
+        </div>
+
+        <div id="modalFeedback" class="hidden pt-3 hairline-t text-[13.5px] font-medium" role="status" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       CONFIGURATION, I18N, ARCHITECTURE DATA & APPLICATION LOGIC
+       ======================================================================== -->
+  <script>
+    /* ========================================================================
+       1. SINGLE EDITABLE CONFIGURATION OBJECT
+       Update brandName, repository URL, email, webhook endpoint, or prices here.
+       ======================================================================== */
+    const CONFIG = {
+      brandName: 'PinForge',
+      githubUrl: 'https://github.com/your-username/pinforge',
+      contactEmail: 'hello@pinforge.studio',
+      waitlistEndpoint: '', // Optional Formspree / webhook POST endpoint (leave empty for local confirmation)
+      pricing: {
+        yearlyDiscountLabel: '—20%',
+        ru: {
+          currency: '₽',
+          creator: { monthly: 2490, yearly: 1990 },
+          pro: { monthly: 5990, yearly: 4790 },
+          studio: { monthly: 14900, yearly: 11900 },
+        },
+        en: {
+          currency: '$',
+          creator: { monthly: 29, yearly: 23 },
+          pro: { monthly: 69, yearly: 55 },
+          studio: { monthly: 169, yearly: 135 },
+        },
+      },
+    };
+
+    /* ========================================================================
+       2. COMPLETE RU / EN LOCALIZATION DICTIONARY
+       ======================================================================== */
+    const I18N = {
+      ru: {
+        pageTitle: `${CONFIG.brandName} — Платформа для системной работы с Pinterest`,
+        nav: {
+          process: 'Процесс',
+          capabilities: 'Возможности',
+          architecture: 'Архитектура',
+          pricing: 'Тарифы',
+          faq: 'FAQ',
+          cta: 'Запросить доступ',
+        },
+        hero: {
+          metaLeft: 'PINTEREST CONTENT ENGINE · V1.0',
+          metaRight: 'RU / EN · MULTI-ACCOUNT · OFFLINE-SAFE',
+          headlineHtml: 'От идеи в чате — до <em class="serif-accent">системных публикаций</em> в Pinterest.',
+          lead: `${CONFIG.brandName} объединяет планирование подборок с референсами, редактуру отдельных пинов и отказоустойчивую публикацию по расписанию в одном рабочем инструменте.`,
+          ctaPrimary: 'Запросить ранний доступ',
+          ctaSecondary: 'Смотреть тарифы →',
+          ledger1Key: 'Формат работы',
+          ledger1Val: 'Серии пинов · доски · расписание',
+          ledger2Key: 'Интеграция',
+          ledger2Val: 'Pinterest OAuth · контроль лимитов',
+          ledger3Key: 'Статус релиза',
+          ledger3Val: 'Закрытый ранний доступ',
+          m1Title: '03 этапа',
+          m1Desc: 'Идея и план → Отбор и правка → Публикация',
+          m2Title: '15 модулей',
+          m2Desc: 'Проработанный UX для всех сценариев и ошибок',
+          m3Title: 'Мультиаккаунты',
+          m3Desc: 'Несколько профилей и досок Pinterest с референсами',
+          m4Title: 'Офлайн-кэш',
+          m4Desc: 'Сохранение черновиков и защита от сбоев сети и лимитов',
+        },
+        pipeline: {
+          label: 'ПАЙПЛАЙН',
+          title: 'Как устроен процесс',
+          subtitle: 'Три последовательных контура без лишних экранов: вы контролируете структуру серии до генерации, правите только нужные карточки и задаёте безопасный ритм выхода.',
+          s1: {
+            meta: 'ПЛАН · РЕФЕРЕНСЫ · ЧЕРНОВИКИ',
+            title: '01 · Бриф, план и референсы',
+            desc: 'Описание задачи в чате, выбор аккаунта и доски, загрузка визуальных референсов, утверждение и правка плана до запуска генерации, сохранение черновиков.',
+            footLeft: 'МОДУЛИ 06, 10',
+            footRight: 'АВТОСОХРАНЕНИЕ',
+          },
+          s2: {
+            meta: 'ОТБОР · ПРАВКА · ПЕРЕРИСОВКА',
+            title: '02 · Отбор и точечная правка',
+            desc: 'Просмотр сеткой или по одному, фильтрация, детальная редактура заголовков и описаний, перерисовка отдельных неудачных вариантов без перезапуска всей серии.',
+            footLeft: 'МОДУЛИ 07, 09',
+            footRight: 'ТОЧЕЧНАЯ ПЕРЕРИСОВКА',
+          },
+          s3: {
+            meta: 'РАСПИСАНИЕ · ОТМЕНА · ЛИМИТЫ',
+            title: '03 · Гибкая публикация и контроль',
+            desc: 'Мгновенный постинг, растягивание серии по времени или выбор точной даты, окно отмены перед отправкой, перенос времени и контроль лимитов Pinterest.',
+            footLeft: 'МОДУЛИ 08, 11',
+            footRight: 'ЗАЩИТА ОТ ЛИМИТОВ',
+          },
+        },
+        capabilities: {
+          label: 'ВОЗМОЖНОСТИ',
+          title: 'Инженерная проработка',
+          subtitle: 'Спецификация ключевых механизмов PinForge: каждый элемент интерфейса решает прикладную задачу производства и защиты контента.',
+          items: [
+            {
+              num: '01',
+              tag: 'ПЛАНИРОВАНИЕ',
+              title: 'Контроль плана до генерации',
+              desc: 'Чат с уточнениями, редактирование структуры подборки, добавление референсов и возврат к сохранённым черновикам.',
+            },
+            {
+              num: '02',
+              tag: 'РЕДАКТУРА',
+              title: 'Редактура на уровне каждого пина',
+              desc: 'Переключение «сетка / по одному», фильтры по статусу, правка текста и генерация нового визуального варианта по клику.',
+            },
+            {
+              num: '03',
+              tag: 'ЭСТЕТИКА ДОСОК',
+              title: 'Профили и референсы досок',
+              desc: 'Привязка визуального стиля и референсов к конкретной доске Pinterest, поиск и фильтрация по библиотеке подборок.',
+            },
+            {
+              num: '04',
+              tag: 'ОЧЕРЕДЬ',
+              title: 'Расписание с окном отмены',
+              desc: 'Режимы «сейчас», «растянуть» и «выбрать время», встроенная защита от времени в прошлом и редактирование очереди публикаций.',
+            },
+            {
+              num: '05',
+              tag: 'ОТКАЗОУСТОЙЧИВОСТЬ',
+              title: 'Устойчивость к сбоям и лимитам',
+              desc: 'Частичные ошибки генерации или постинга не ломают всю подборку; встроенная обработка лимитов Pinterest и истёкших токенов переподключения.',
+            },
+            {
+              num: '06',
+              tag: 'ИНФРАСТРУКТУРА',
+              title: 'Надёжность и офлайн-режим',
+              desc: 'Работа с сохранённым кэшем без интернета, прозрачные статусы синхронизации, светлая/тёмная тема и интерфейс RU / EN.',
+            },
+          ],
+        },
+        arch: {
+          label: 'АРХИТЕКТУРА · 15 МОДУЛЕЙ',
+          title: 'Карта архитектуры продукта',
+          subtitle: 'Полная спецификация экранов и системных состояний: для каждого из 15 модулей зафиксирован основной сценарий и обработка крайних случаев.',
+          indexCol: 'ИНДЕКС МОДУЛЕЙ',
+          mainPathTitle: 'Основной путь →',
+          edgePathTitle: 'Обработка ошибок и крайних случаев →',
+          prev: 'Предыдущий',
+          next: 'Следующий',
+          filters: [
+            { id: 'all', label: 'Все (15)' },
+            { id: 'access', label: 'Доступ (01–03)' },
+            { id: 'content', label: 'Работа с контентом (04–09)' },
+            { id: 'pinterest', label: 'Pinterest и доски (10–11)' },
+            { id: 'system', label: 'Система и подписка (12–15)' },
+          ],
+          modules: [
+            {
+              num: '01',
+              cat: 'access',
+              catLabel: 'ДОСТУП',
+              title: 'Вход',
+              summary: 'Email и пароль, загрузка и ошибки',
+              main: [
+                'Форма входа по e-mail и паролю с мгновенной валидацией полей',
+                'Индикация состояния загрузки без дублирования запросов',
+                'Автоматическая проверка активной сессии и переход на главный экран',
+              ],
+              edge: [
+                'Неверный пароль или неизвестный e-mail — точное сообщение без раскрытия лишних данных',
+                'Потеря сети во время входа — сохранение введённого адреса и повтор по клику',
+                'Ограничение попыток входа — предупреждение и быстрый переход к восстановлению',
+              ],
+            },
+            {
+              num: '02',
+              cat: 'access',
+              catLabel: 'ДОСТУП',
+              title: 'Регистрация',
+              summary: 'Регистрация, подтверждение почты и ошибки',
+              main: [
+                'Создание аккаунта по e-mail и надёжному паролю',
+                'Экран ожидания подтверждения почты с таймером повторной отправки',
+                'Подтверждение адреса и переход к онбордингу',
+              ],
+              edge: [
+                'E-mail уже занят — аккуратное предложение перейти ко входу или сбросу пароля',
+                'Истёкшая ссылка подтверждения — генерация нового письма в один клик',
+                'Некорректный формат адреса или слабый пароль — подсветка требований до отправки',
+              ],
+            },
+            {
+              num: '03',
+              cat: 'access',
+              catLabel: 'ДОСТУП',
+              title: 'Восстановление пароля',
+              summary: 'Запрос ссылки, новый пароль и ошибки',
+              main: [
+                'Запрос ссылки сброса на привязанный e-mail',
+                'Форма задания нового пароля с подтверждением',
+                'Успешное обновление и безопасный возврат к экрану входа',
+              ],
+              edge: [
+                'Истёкший или уже использованный токен сброса — понятный статус и повторный запрос',
+                'Сбой сети при сохранении нового пароля — безопасный повтор без сброса формы',
+              ],
+            },
+            {
+              num: '04',
+              cat: 'content',
+              catLabel: 'РАБОТА С КОНТЕНТОМ',
+              title: 'Онбординг',
+              summary: 'Три шага: идеи, отбор, публикация и переход на главную',
+              main: [
+                'Шаг 1: Формулировка идеи в чате и выбор референсов доски',
+                'Шаг 2: Отбор готовых карточек и точечная правка текста',
+                'Шаг 3: Публикация по расписанию и переход на главную',
+              ],
+              edge: [
+                'Пропуск онбординга — запоминание флага прохождения и доступ к справке из настроек',
+                'Возврат к шагам без повторного запроса подключённого аккаунта',
+              ],
+            },
+            {
+              num: '05',
+              cat: 'content',
+              catLabel: 'РАБОТА С КОНТЕНТОМ',
+              title: 'Главная',
+              summary: 'Первая подборка, данные, генерация, офлайн-кэш и частичные данные',
+              main: [
+                'Пустое состояние для запуска первой подборки без визуального шума',
+                'Сводка активных подборок, статуса генерации и ближайших слотов публикации',
+                'Быстрый вход в создание новой серии или возврат к черновику',
+              ],
+              edge: [
+                'Офлайн-кэш — отображение последних синхронизированных данных с меткой актуальности',
+                'Частичные данные — если один из блоков не загрузился, остальной экран остаётся рабочим',
+              ],
+            },
+            {
+              num: '06',
+              cat: 'content',
+              catLabel: 'РАБОТА С КОНТЕНТОМ',
+              title: 'Создание подборки',
+              summary: 'Чат, план, правка плана, референсы, черновики, прогресс и частичные ошибки',
+              main: [
+                'Диалог с уточнением задачи, выбор аккаунта и целевой доски Pinterest',
+                'Формирование и ручная правка плана подборки до запуска генерации',
+                'Добавление визуальных референсов, сохранение черновиков и поэтапный прогресс',
+              ],
+              edge: [
+                'Частичная ошибка генерации — готовые пины сохраняются, сбойные помечаются для точечного повтора',
+                'Прерывание сессии или закрытие вкладки — автоматическое восстановление черновика плана',
+              ],
+            },
+            {
+              num: '07',
+              cat: 'content',
+              catLabel: 'РАБОТА С КОНТЕНТОМ',
+              title: 'Отбор и правка пинов',
+              summary: 'Сетка и по одному, фильтры, детали, правка текста, новый вариант',
+              main: [
+                'Переключение режимов «сетка» и «по одному», фильтры по статусу отбора',
+                'Детальная карточка пина: правка заголовка, описания и ссылки назначения',
+                'Генерация нового визуального варианта для отдельного пина без сброса серии',
+              ],
+              edge: [
+                'Попытка перейти к публикации с 0 выбранных пинов — явная блокировка с подсказкой',
+                'Превышение длины заголовка/описания Pinterest — живой индикатор лимита символов',
+              ],
+            },
+            {
+              num: '08',
+              cat: 'content',
+              catLabel: 'РАБОТА С КОНТЕНТОМ',
+              title: 'Публикация',
+              summary: 'Сейчас, растянуть, расписание, окно отмены, лимиты Pinterest, изменение времени',
+              main: [
+                'Выбор режима: «Сейчас», «Растянуть» по интервалу или точная дата и время',
+                'Окно отмены перед финальной отправкой в очередь публикаций',
+                'Редактирование и перенос времени отдельных слотов в расписании',
+              ],
+              edge: [
+                'Выбор времени в прошлом — встроенная защита и автоматическая корректировка слота',
+                'Достижение лимитов Pinterest API — предупреждение, безопасный сдвиг очереди и повтор',
+              ],
+            },
+            {
+              num: '09',
+              cat: 'content',
+              catLabel: 'РАБОТА С КОНТЕНТОМ',
+              title: 'Библиотека подборок',
+              summary: 'Все подборки, поиск, статусы пинов, меню и расписание подборки',
+              main: [
+                'Единый каталог всех подборок с быстрым поиском по названию и доске',
+                'Чёткие статусы каждого пина: черновик, запланирован, опубликован, ошибка',
+                'Контекстное меню подборки и встроенный просмотр её расписания',
+              ],
+              edge: [
+                'Пустой результат поиска — быстрый сброс фильтров без потери текущего состояния',
+                'Удаление подборки с запланированными слотами — предупреждение об отмене очереди',
+              ],
+            },
+            {
+              num: '10',
+              cat: 'pinterest',
+              catLabel: 'PINTEREST И ДОСКИ',
+              title: 'Доски',
+              summary: 'Список досок, профиль доски, выбор референсов и настройки',
+              main: [
+                'Синхронизированный список досок подключённых аккаунтов Pinterest',
+                'Индивидуальный профиль доски: стиль, тон текста и базовая ссылка',
+                'Библиотека визуальных референсов и настройки генерации для каждой доски',
+              ],
+              edge: [
+                'Доска удалена или скрыта в Pinterest — уведомление и безопасное переназначение доски',
+                'Пустой список досок — подсказка по созданию доски и обновлению синхронизации',
+              ],
+            },
+            {
+              num: '11',
+              cat: 'pinterest',
+              catLabel: 'PINTEREST И ДОСКИ',
+              title: 'Подключение Pinterest',
+              summary: 'Аккаунты Pinterest, разрешения, переподключение и отключение',
+              main: [
+                'Управление несколькими подключёнными аккаунтами Pinterest',
+                'Прозрачный экран запрашиваемых OAuth-разрешений до авторизации',
+                'Быстрое переподключение и безопасное отключение выбранного профиля',
+              ],
+              edge: [
+                'Истёкший OAuth-токен или отзыв прав в Pinterest — статус «Требуется переподключение» без потери черновиков',
+                'Отмена авторизации пользователем — корректный возврат без сломанного состояния',
+              ],
+            },
+            {
+              num: '12',
+              cat: 'system',
+              catLabel: 'СИСТЕМА И ПОДПИСКА',
+              title: 'Профиль и настройки',
+              summary: 'Уведомления, генерация по умолчанию, внешний вид, язык Русский / English, помощь',
+              main: [
+                'Настройка уведомлений о завершении генерации и статусах публикаций',
+                'Параметры генерации по умолчанию (формат, количество, стиль)',
+                'Переключение светлой/тёмной темы, языка Русский / English и раздел помощи',
+              ],
+              edge: [
+                'Отключённые системные уведомления — явный индикатор и инструкция по включению',
+                'Мгновенная смена темы и языка без перезагрузки и потери несохранённых данных',
+              ],
+            },
+            {
+              num: '13',
+              cat: 'system',
+              catLabel: 'СИСТЕМА И ПОДПИСКА',
+              title: 'Аккаунт и безопасность',
+              summary: 'Смена пароля, выход, удаление аккаунта с подтверждением паролем',
+              main: [
+                'Смена пароля с проверкой текущего пароля и обновлением сессий',
+                'Чистый выход из аккаунта с очисткой локального защищённого кэша',
+                'Удаление аккаунта с обязательным подтверждением паролем',
+              ],
+              edge: [
+                'Неверный пароль при подтверждении удаления — защита от случайного удаления данных',
+                'Автоматический отзыв подключённых токенов Pinterest при закрытии учётной записи',
+              ],
+            },
+            {
+              num: '14',
+              cat: 'system',
+              catLabel: 'СИСТЕМА И ПОДПИСКА',
+              title: 'Подписка Pro',
+              summary: 'Тариф, оплата, управление подпиской и восстановление покупок',
+              main: [
+                'Прозрачное сравнение тарифов Creator, Pro и Studio с текущим расходом квот',
+                'Оформление, смена периода оплаты и управление активной подпиской',
+                'Восстановление покупок и синхронизация статуса доступа на новых устройствах',
+              ],
+              edge: [
+                'Задержка подтверждения платежа — статус ожидания и ручная проверка без двойного списания',
+                'Окончание оплаченного периода — мягкий переход без удаления созданных подборок',
+              ],
+            },
+            {
+              num: '15',
+              cat: 'system',
+              catLabel: 'СИСТЕМА И ПОДПИСКА',
+              title: 'Системные состояния',
+              summary: 'Разрешения, центр уведомлений, истёкшая сессия, обновления, офлайн без кэша, доступ к фото',
+              main: [
+                'Центр уведомлений с историей генераций, публикаций и предупреждений по лимитам',
+                'Экраны запроса системных разрешений (доступ к фото для референсов, уведомления)',
+                'Информирование о критических и плановых обновлениях платформы',
+              ],
+              edge: [
+                'Истёкшая сессия — аккуратный повторный вход с возвратом на исходный экран',
+                'Офлайн без кэша и отказ в доступе к фото — чёткие инструкции восстановления без «белого экрана»',
+              ],
+            },
+          ],
+        },
+        pricing: {
+          label: 'ТАРИФЫ',
+          title: 'Тарифы для авторов и студий',
+          subtitle: 'Прозрачные квоты под регулярное производство серий в Pinterest. Без скрытых доплат за базовые функции безопасности и кэша.',
+          monthly: 'Помесячно',
+          yearly: 'Ежегодно',
+          perMonth: '/ мес',
+          billedYearly: (total, cur) => `Оплата за год: ${total} ${cur} · экономия 20%`,
+          billedMonthly: 'Помесячное списание · отмена в любой момент',
+          noteLeft: 'Все тарифы включают OAuth-подключение Pinterest, офлайн-кэш и переключение RU / EN.',
+          currencyNote: 'Валюта: RUB (₽) · Переключите на EN для USD ($)',
+          tiers: [
+            {
+              id: 'Creator',
+              name: 'Creator',
+              tag: 'СОЛО-АВТОРЫ',
+              desc: 'Для регулярного ведения одного проекта и формирования визуальной библиотеки досок.',
+              cta: 'Запросить доступ',
+              featured: false,
+              features: [
+                '1 аккаунт Pinterest',
+                'До 15 подборок в месяц',
+                'Базовое планирование публикаций',
+                'Библиотека референсов для досок',
+                'Редактура заголовков, описаний и черновики',
+              ],
+            },
+            {
+              id: 'Pro',
+              name: 'Pro',
+              tag: 'РЕКОМЕНДУЕМ',
+              desc: 'Для маркетологов, брендов и авторов с системным потоком пинов на несколько аккаунтов.',
+              cta: 'Выбрать Pro',
+              featured: true,
+              features: [
+                'До 5 аккаунтов Pinterest',
+                'До 60 подборок в месяц',
+                'Режим «Растянуть» и окно отмены',
+                'Точечная перерисовка отдельных пинов',
+                'Приоритетная очередь генерации и история черновиков',
+              ],
+            },
+            {
+              id: 'Studio',
+              name: 'Studio',
+              tag: 'АГЕНТСТВА И КОМАНДЫ',
+              desc: 'Для контент-студий и агентств с большим числом клиентских досок и выделенным контролем лимитов.',
+              cta: 'Обсудить Studio',
+              featured: false,
+              features: [
+                'Безлимит аккаунтов и досок Pinterest',
+                'До 200 подборок в месяц',
+                'Командные процессы и согласование серий',
+                'Кастомные профили стиля для каждой доски',
+                'Выделенная обработка API/лимитов и приоритетная поддержка',
+              ],
+            },
+          ],
+        },
+        faq: {
+          label: 'ВОПРОСЫ',
+          title: 'Частые вопросы',
+          subtitle: 'Коротко о безопасности подключения, обработке сбоев, референсах досок и условиях оплаты.',
+          items: [
+            {
+              q: 'Как устроено подключение Pinterest и насколько это безопасно?',
+              a: `${CONFIG.brandName} использует официальную OAuth-авторизацию Pinterest. Вы заранее видите точный список прав (чтение досок и публикация пинов), а пароль от Pinterest никогда не передаётся на наши серверы. Любой аккаунт можно переподключить или отозвать доступ в один клик в разделе «Подключение Pinterest».`,
+            },
+            {
+              q: 'Что происходит при достижении лимитов Pinterest или частичных сбоях?',
+              a: 'Платформа не ломает всю подборку из-за одного сбойного элемента. При частичной ошибке генерации готовые пины сохраняются, а сбойные можно перерисовать отдельно. При приближении к лимитам API планировщик предупреждает заранее, сдвигает слоты на безопасное окно и фиксирует событие в центре уведомлений.',
+            },
+            {
+              q: 'Как работают референсы и профили отдельных досок?',
+              a: 'Для каждой доски Pinterest создаётся собственный профиль: вы прикрепляете набор визуальных референсов, задаёте тональность текстов и базовую ссылку. При создании новой подборки для этой доски настройки подтягиваются автоматически, сохраняя единую визуальную дисциплину.',
+            },
+            {
+              q: 'Чем тариф Pro отличается от Studio?',
+              a: 'Pro закрывает потребности сольного маркетолога или бренда (до 5 аккаунтов, до 60 подборок в месяц, растянутый постинг, перерисовка пинов и приоритетная очередь). Studio рассчитан на агентства и команды: безлимит аккаунтов и досок, до 200 подборок, командные процессы, кастомные профили стиля, выделенная обработка лимитов API и приоритетная поддержка.',
+            },
+            {
+              q: 'Как управлять подпиской и можно ли отменить её в любой момент?',
+              a: 'Да, подпиской можно управлять напрямую в разделе «Подписка Pro» — переходить между тарифами, менять помесячный и годовой периоды или отменять продление в любой момент. После отмены доступ сохраняется до конца оплаченного периода, а ваши подборки и черновики не удаляются.',
+            },
+          ],
+        },
+        access: {
+          label: 'РАННИЙ ДОСТУП',
+          title: `Получить доступ к ${CONFIG.brandName}`,
+          subtitle: 'Оставьте рабочий e-mail и выберите подходящий тариф. Мы подключаем новые аккаунты и студии волнами, чтобы гарантировать стабильные лимиты генерации.',
+        },
+        form: {
+          nameLabel: 'Имя или название студии',
+          namePlaceholder: 'Алина / Studio Nord',
+          emailLabel: 'Рабочий e-mail *',
+          planLabel: 'Интересующий тариф',
+          submit: 'Запросить доступ',
+          submitting: 'Отправляем заявку...',
+          note: 'Без спама · приглашение по готовности слота',
+          errorEmail: 'Укажите корректный e-mail адрес.',
+          success: (plan) => `Заявка принята (${plan}). Мы напишем на указанный e-mail, как только откроется слот.`,
+        },
+        modal: {
+          eyebrow: `${CONFIG.brandName.toUpperCase()} · РАННИЙ ДОСТУП`,
+          title: 'Запросить доступ',
+        },
+        footer: {
+          copy: `© 2026 ${CONFIG.brandName}. Все права защищены.`,
+          disclaimer: 'Не является аффилированным продуктом Pinterest, Inc.',
+        },
+      },
+
+      en: {
+        pageTitle: `${CONFIG.brandName} — Systematic Pinterest Workflow Platform`,
+        nav: {
+          process: 'Workflow',
+          capabilities: 'Capabilities',
+          architecture: 'Architecture',
+          pricing: 'Pricing',
+          faq: 'FAQ',
+          cta: 'Request Access',
+        },
+        hero: {
+          metaLeft: 'PINTEREST CONTENT ENGINE · V1.0',
+          metaRight: 'RU / EN · MULTI-ACCOUNT · OFFLINE-SAFE',
+          headlineHtml: 'From chat briefs — to <em class="serif-accent">systematic publishing</em> on Pinterest.',
+          lead: `${CONFIG.brandName} unifies reference-driven collection planning, pin-level editing, and fault-tolerant scheduled publishing inside one disciplined workspace.`,
+          ctaPrimary: 'Request Early Access',
+          ctaSecondary: 'View Pricing →',
+          ledger1Key: 'Scope',
+          ledger1Val: 'Pin collections · boards · cadence',
+          ledger2Key: 'Integration',
+          ledger2Val: 'Pinterest OAuth · rate-limit guard',
+          ledger3Key: 'Release Status',
+          ledger3Val: 'Private early access',
+          m1Title: '03 stages',
+          m1Desc: 'Brief & Plan → Select & Edit → Schedule & Publish',
+          m2Title: '15 modules',
+          m2Desc: 'Engineered UX across core flows and failure states',
+          m3Title: 'Multi-account',
+          m3Desc: 'Multiple Pinterest profiles and boards with references',
+          m4Title: 'Offline cache',
+          m4Desc: 'Draft persistence and protection from network or API limits',
+        },
+        pipeline: {
+          label: 'PIPELINE',
+          title: 'How the workflow operates',
+          subtitle: 'Three sequential stages without interface clutter: approve the collection structure before generation, refine individual pins, and publish on a safe cadence.',
+          s1: {
+            meta: 'PLAN · REFERENCES · DRAFTS',
+            title: '01 · Brief, Plan & References',
+            desc: 'Define the brief in chat, select the target Pinterest account and board, attach visual references, edit the plan prior to generation, and keep drafts saved.',
+            footLeft: 'MODULES 06, 10',
+            footRight: 'AUTO-SAVED DRAFTS',
+          },
+          s2: {
+            meta: 'CURATE · EDIT · REDRAW',
+            title: '02 · Curation & Pin-Level Edits',
+            desc: 'Switch between grid and single-pin inspection, filter selections, edit titles and descriptions, and regenerate individual weak variants without rerunning the entire batch.',
+            footLeft: 'MODULES 07, 09',
+            footRight: 'PER-PIN REGENERATION',
+          },
+          s3: {
+            meta: 'CADENCE · UNDO · LIMITS',
+            title: '03 · Flexible Publishing & Control',
+            desc: 'Post immediately, stretch a collection across time intervals, or pick exact timestamps — with a pre-send cancel window, slot rescheduling, and Pinterest rate-limit control.',
+            footLeft: 'MODULES 08, 11',
+            footRight: 'RATE-LIMIT PROTECTED',
+          },
+        },
+        capabilities: {
+          label: 'CAPABILITIES',
+          title: 'Engineered for real production',
+          subtitle: 'Specification of PinForge core mechanisms: every component solves a concrete operational problem in Pinterest publishing.',
+          items: [
+            {
+              num: '01',
+              tag: 'PLANNING',
+              title: 'Plan approval before generation',
+              desc: 'Iterative chat clarifications, editable collection outlines, visual reference attachment, and seamless return to saved drafts.',
+            },
+            {
+              num: '02',
+              tag: 'CURATION',
+              title: 'Pin-level editorial control',
+              desc: 'Grid vs. single-card views, status filters, direct title and description editing, and single-click regeneration for any individual pin.',
+            },
+            {
+              num: '03',
+              tag: 'BOARD IDENTITY',
+              title: 'Board profiles & reference libraries',
+              desc: 'Bind visual style rules and reference images to each specific Pinterest board, with fast search and filtering across your collection library.',
+            },
+            {
+              num: '04',
+              tag: 'SCHEDULING',
+              title: 'Cadence scheduler with cancel window',
+              desc: '"Publish now", "Stretch over time", and "Pick exact time" modes, built-in past-timestamp prevention, and editable publication queues.',
+            },
+            {
+              num: '05',
+              tag: 'RESILIENCE',
+              title: 'Fault & rate-limit resilience',
+              desc: 'Partial generation or posting failures never break the whole batch; built-in Pinterest rate-limit handling and expired-token reconnection flows.',
+            },
+            {
+              num: '06',
+              tag: 'INFRASTRUCTURE',
+              title: 'Reliability & offline-first cache',
+              desc: 'Access cached collections and drafts offline, transparent sync indicators, crisp Light/Dark appearance, and full RU / EN interface.',
+            },
+          ],
+        },
+        arch: {
+          label: 'ARCHITECTURE · 15 MODULES',
+          title: 'Product architecture map',
+          subtitle: 'Complete specification of screens and system states: every one of the 15 modules maps both its primary path and explicit edge-case handling.',
+          indexCol: 'MODULE INDEX',
+          mainPathTitle: 'Primary Path →',
+          edgePathTitle: 'Error & Edge-Case Handling →',
+          prev: 'Previous',
+          next: 'Next',
+          filters: [
+            { id: 'all', label: 'All (15)' },
+            { id: 'access', label: 'Access (01–03)' },
+            { id: 'content', label: 'Content Workflow (04–09)' },
+            { id: 'pinterest', label: 'Pinterest & Boards (10–11)' },
+            { id: 'system', label: 'System & Billing (12–15)' },
+          ],
+          modules: [
+            {
+              num: '01',
+              cat: 'access',
+              catLabel: 'ACCESS',
+              title: 'Sign In',
+              summary: 'Email & password, loading states, and error handling',
+              main: [
+                'Email and password form with crisp client-side validation',
+                'Deterministic loading state preventing duplicate submissions',
+                'Active session verification and direct routing to Home',
+              ],
+              edge: [
+                'Invalid credentials — clear error message without leaking account metadata',
+                'Network drop during sign-in — retains email input and allows clean retry',
+                'Rate-limited attempts — warning state with direct password recovery link',
+              ],
+            },
+            {
+              num: '02',
+              cat: 'access',
+              catLabel: 'ACCESS',
+              title: 'Registration',
+              summary: 'Account creation, email confirmation, and errors',
+              main: [
+                'Account creation with email and password strength rules',
+                'Email verification screen with resend cooldown timer',
+                'Confirmed account handoff directly into Onboarding',
+              ],
+              edge: [
+                'Email already registered — non-destructive prompt to sign in or reset password',
+                'Expired verification link — one-click fresh confirmation email',
+                'Malformed email or weak password — inline requirements shown before submit',
+              ],
+            },
+            {
+              num: '03',
+              cat: 'access',
+              catLabel: 'ACCESS',
+              title: 'Password Recovery',
+              summary: 'Reset link request, new password setup, and errors',
+              main: [
+                'Request reset link for registered email address',
+                'New password entry and confirmation form',
+                'Verified password update with clean return to Sign In',
+              ],
+              edge: [
+                'Expired or already-consumed reset token — explicit status with re-request CTA',
+                'Connection failure on save — safe retry without resetting entered fields',
+              ],
+            },
+            {
+              num: '04',
+              cat: 'content',
+              catLabel: 'CONTENT WORKFLOW',
+              title: 'Onboarding',
+              summary: 'Three steps: ideas, curation, publishing, and route to Home',
+              main: [
+                'Step 1: Drafting collection briefs in chat with board references',
+                'Step 2: Selecting generated pins and refining copy per card',
+                'Step 3: Scheduling cadence and entering the main workspace',
+              ],
+              edge: [
+                'Skip onboarding — persists completion flag while keeping guides in Help',
+                'Re-visiting steps without forcing account reconnection',
+              ],
+            },
+            {
+              num: '05',
+              cat: 'content',
+              catLabel: 'CONTENT WORKFLOW',
+              title: 'Home Workspace',
+              summary: 'First collection, live data, generation status, offline cache, and partial loads',
+              main: [
+                'Focused empty state to initiate the first collection',
+                'Overview of active collections, live generation progress, and upcoming slots',
+                'Quick entry to new collection creation or latest saved draft',
+              ],
+              edge: [
+                'Offline cache — renders last synced snapshot with clear freshness indicator',
+                'Partial data load — isolates failed widgets so the rest of Home stays usable',
+              ],
+            },
+            {
+              num: '06',
+              cat: 'content',
+              catLabel: 'CONTENT WORKFLOW',
+              title: 'Collection Creation',
+              summary: 'Chat, plan, plan editing, references, drafts, progress, and partial failures',
+              main: [
+                'Structured chat brief with Pinterest account and board selection',
+                'Editable collection plan approved before generation begins',
+                'Visual reference attachment, auto-saved drafts, and granular progress tracking',
+              ],
+              edge: [
+                'Partial generation error — completed pins persist while failed items retry individually',
+                'Session interruption — draft plan and references restore automatically',
+              ],
+            },
+            {
+              num: '07',
+              cat: 'content',
+              catLabel: 'CONTENT WORKFLOW',
+              title: 'Pin Curation & Editing',
+              summary: 'Grid and single view, filters, details, copy edit, new variant',
+              main: [
+                'Toggle between grid overview and single-pin inspection with status filters',
+                'Pin detail view for editing titles, descriptions, and destination URLs',
+                'Trigger a new visual variant for an individual pin without touching the batch',
+              ],
+              edge: [
+                'Attempting to publish with 0 selected pins — clear guard preventing empty queues',
+                'Exceeding Pinterest character limits — live counter flags overflow inline',
+              ],
+            },
+            {
+              num: '08',
+              cat: 'content',
+              catLabel: 'CONTENT WORKFLOW',
+              title: 'Publishing',
+              summary: 'Now, stretch, schedule, cancel window, Pinterest limits, rescheduling',
+              main: [
+                'Three modes: Publish Now, Stretch across intervals, or Pick exact date/time',
+                'Pre-dispatch cancel window before pins commit to the queue',
+                'Edit or reschedule individual publication slots directly',
+              ],
+              edge: [
+                'Past timestamp selected — automatic validation guard prevents invalid slots',
+                'Pinterest API rate limit reached — safe slot deferral and clear queue alert',
+              ],
+            },
+            {
+              num: '09',
+              cat: 'content',
+              catLabel: 'CONTENT WORKFLOW',
+              title: 'Collection Library',
+              summary: 'All collections, search, pin statuses, actions menu, and collection schedule',
+              main: [
+                'Unified archive of all collections with instant search by title and board',
+                'Explicit pin statuses: draft, scheduled, published, or failed',
+                'Collection action menu and per-collection timeline view',
+              ],
+              edge: [
+                'Zero search matches — one-click filter reset without losing scroll context',
+                'Deleting a collection with pending slots — explicit queue cancellation confirmation',
+              ],
+            },
+            {
+              num: '10',
+              cat: 'pinterest',
+              catLabel: 'PINTEREST & BOARDS',
+              title: 'Boards',
+              summary: 'Board directory, board profile, reference picker, and settings',
+              main: [
+                'Synced directory of boards across connected Pinterest accounts',
+                'Dedicated board profile: visual style, copy tone, and default URL',
+                'Reference image library and per-board generation defaults',
+              ],
+              edge: [
+                'Board deleted or archived on Pinterest — prompts clean reassignment of target board',
+                'Empty board list — clear guidance to create a board and re-sync',
+              ],
+            },
+            {
+              num: '11',
+              cat: 'pinterest',
+              catLabel: 'PINTEREST & BOARDS',
+              title: 'Pinterest Connection',
+              summary: 'Pinterest accounts, permissions, reconnect, and disconnect',
+              main: [
+                'Multi-account management for connected Pinterest profiles',
+                'Transparent OAuth scope breakdown prior to authorization',
+                'One-click token refresh and clean profile disconnection',
+              ],
+              edge: [
+                'Expired OAuth token or revoked scope — "Reconnect required" banner with zero draft loss',
+                'User aborts OAuth flow — returns cleanly without corrupted state',
+              ],
+            },
+            {
+              num: '12',
+              cat: 'system',
+              catLabel: 'SYSTEM & BILLING',
+              title: 'Profile & Settings',
+              summary: 'Notifications, generation defaults, appearance, RU / EN language, help',
+              main: [
+                'Granular notification toggles for completed batches and publishing alerts',
+                'Default generation preferences (ratio, batch size, tone)',
+                'Light/Dark appearance switch, RU / EN localization, and Help center',
+              ],
+              edge: [
+                'System notifications blocked — inline status indicator with recovery steps',
+                'Instant theme and language switch without reloading or dropping unsaved state',
+              ],
+            },
+            {
+              num: '13',
+              cat: 'system',
+              catLabel: 'SYSTEM & BILLING',
+              title: 'Account & Security',
+              summary: 'Password change, sign out, password-confirmed account deletion',
+              main: [
+                'Password update requiring current password verification',
+                'Clean sign-out that purges local protected cache',
+                'Permanent account deletion gated by explicit password confirmation',
+              ],
+              edge: [
+                'Incorrect confirmation password — prevents accidental account deletion',
+                'Automatic revocation of stored Pinterest OAuth tokens upon closure',
+              ],
+            },
+            {
+              num: '14',
+              cat: 'system',
+              catLabel: 'SYSTEM & BILLING',
+              title: 'Pro Subscription',
+              summary: 'Plan selection, checkout, subscription management, and purchase restore',
+              main: [
+                'Clear Creator / Pro / Studio tier comparison and live quota meter',
+                'Checkout flow, billing cycle switch, and subscription management',
+                'Restore purchases to sync active entitlements across sessions',
+              ],
+              edge: [
+                'Delayed payment confirmation — pending status check preventing duplicate billing',
+                'Lapsed subscription — graceful downgrade preserving all existing drafts and libraries',
+              ],
+            },
+            {
+              num: '15',
+              cat: 'system',
+              catLabel: 'SYSTEM & BILLING',
+              title: 'System States',
+              summary: 'Permissions, notification center, expired session, updates, offline without cache, photo access',
+              main: [
+                'Notification center logging generations, published pins, and limit warnings',
+                'Permission prompts for photo library references and system alerts',
+                'Platform update notices for critical and scheduled releases',
+              ],
+              edge: [
+                'Expired session — graceful re-authentication returning to the prior route',
+                'Offline without cache or denied photo access — clear recovery instructions instead of blank screens',
+              ],
+            },
+          ],
+        },
+        pricing: {
+          label: 'PRICING',
+          title: 'Pricing for creators & studios',
+          subtitle: 'Clear quotas engineered for sustained Pinterest publishing. Core OAuth security, offline cache, and error recovery are included in every tier.',
+          monthly: 'Monthly',
+          yearly: 'Yearly',
+          perMonth: '/ mo',
+          billedYearly: (total, cur) => `Billed ${cur}${total} annually · save 20%`,
+          billedMonthly: 'Billed monthly · cancel anytime',
+          noteLeft: 'Every plan includes official Pinterest OAuth, offline cache, and RU / EN localization.',
+          currencyNote: 'Currency: USD ($) · Switch to RU for RUB (₽)',
+          tiers: [
+            {
+              id: 'Creator',
+              name: 'Creator',
+              tag: 'SOLO CREATORS',
+              desc: 'For disciplined publishing on a single Pinterest account with a structured reference library.',
+              cta: 'Request Access',
+              featured: false,
+              features: [
+                '1 Pinterest account',
+                'Up to 15 collections / mo',
+                'Standard scheduling',
+                'Board reference library',
+                'Pin copy editing & saved drafts',
+              ],
+            },
+            {
+              id: 'Pro',
+              name: 'Pro',
+              tag: 'RECOMMENDED',
+              desc: 'For growth marketers, brands, and creators running consistent pin pipelines across accounts.',
+              cta: 'Choose Pro',
+              featured: true,
+              features: [
+                'Up to 5 Pinterest accounts',
+                'Up to 60 collections / mo',
+                'Stretched scheduling & cancel window',
+                'Per-pin regeneration',
+                'Priority queue & draft history',
+              ],
+            },
+            {
+              id: 'Studio',
+              name: 'Studio',
+              tag: 'AGENCIES & TEAMS',
+              desc: 'For content studios and agencies managing high-volume client boards with dedicated rate-limit control.',
+              cta: 'Discuss Studio',
+              featured: false,
+              features: [
+                'Unlimited Pinterest accounts & boards',
+                'Up to 200 collections / mo',
+                'Team workflows & review stages',
+                'Custom board style profiles',
+                'Dedicated API/rate-limit handling & priority support',
+              ],
+            },
+          ],
+        },
+        faq: {
+          label: 'FAQ',
+          title: 'Common questions',
+          subtitle: 'Concise answers regarding Pinterest OAuth safety, fault recovery, board references, and billing.',
+          items: [
+            {
+              q: 'How does Pinterest connection work and is my account safe?',
+              a: `${CONFIG.brandName} connects exclusively via official Pinterest OAuth. You review the exact scopes requested (reading boards and creating pins) before authorizing, and your Pinterest password never touches our infrastructure. Tokens can be refreshed or revoked anytime under Pinterest Connection.`,
+            },
+            {
+              q: 'What happens on Pinterest rate limits or partial generation failures?',
+              a: 'A single failure never invalidates a full batch. If one or two pins fail during generation, completed cards are saved and failed ones can be retried individually. When approaching Pinterest API rate limits, the scheduler defers slots safely and logs the adjustment in the notification center.',
+            },
+            {
+              q: 'How do board references and style profiles work?',
+              a: 'Each Pinterest board can hold its own style profile: curated visual references, copy guidelines, and default destination links. Whenever you start a new collection for that board, PinForge automatically loads its profile to maintain visual cohesion.',
+            },
+            {
+              q: 'What is the difference between Pro and Studio?',
+              a: 'Pro is designed for solo operators and brands (up to 5 Pinterest accounts, 60 collections/mo, stretched cadence, per-pin regeneration, and priority queue). Studio unlocks unlimited accounts and boards, up to 200 collections/mo, team workflows, custom board style profiles, dedicated API/rate-limit handling, and priority support.',
+            },
+            {
+              q: 'How do billing and cancellation work?',
+              a: 'You can upgrade, switch between monthly and annual billing, or cancel renewal at any time inside Pro Subscription settings. After cancellation, access continues through the end of the current billing period and your collections and drafts remain intact.',
+            },
+          ],
+        },
+        access: {
+          label: 'EARLY ACCESS',
+          title: `Request access to ${CONFIG.brandName}`,
+          subtitle: 'Leave your work email and select your target tier. We onboard creators and studios in waves to maintain predictable generation capacity and API stability.',
+        },
+        form: {
+          nameLabel: 'Name or Studio',
+          namePlaceholder: 'Alex / Studio Nord',
+          emailLabel: 'Work Email *',
+          planLabel: 'Target Plan',
+          submit: 'Request Access',
+          submitting: 'Submitting...',
+          note: 'No spam · invite sent when your slot opens',
+          errorEmail: 'Please enter a valid email address.',
+          success: (plan) => `Request received (${plan}). We will reach out as soon as your access slot opens.`,
+        },
+        modal: {
+          eyebrow: `${CONFIG.brandName.toUpperCase()} · EARLY ACCESS`,
+          title: 'Request Access',
+        },
+        footer: {
+          copy: `© 2026 ${CONFIG.brandName}. All rights reserved.`,
+          disclaimer: 'Not affiliated with or endorsed by Pinterest, Inc.',
+        },
+      },
+    };
+
+    /* ========================================================================
+       3. APPLICATION STATE
+       ======================================================================== */
+    const state = {
+      lang: 'ru',
+      theme: 'light',
+      billing: 'yearly', // 'monthly' | 'yearly'
+      archFilter: 'all',
+      selectedModuleNum: '01',
+      openFaqIndex: 0,
+      lastFocusedEl: null,
+    };
+
+    /* ========================================================================
+       4. HELPERS
+       ======================================================================== */
+    function getPath(obj, path) {
+      return path.split('.').reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : null), obj);
+    }
+
+    function formatNumber(n, lang) {
+      if (lang === 'ru') {
+        return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+      }
+      return n.toLocaleString('en-US');
+    }
+
+    function formatPrice(amount, lang) {
+      const cur = CONFIG.pricing[lang].currency;
+      const formatted = formatNumber(amount, lang);
+      return lang === 'ru' ? `${formatted}\u00A0${cur}` : `${cur}${formatted}`;
+    }
+
+    /* ========================================================================
+       5. THEME & LANGUAGE CONTROLLERS
+       ======================================================================== */
+    function applyTheme(theme) {
+      state.theme = theme;
+      document.documentElement.setAttribute('data-theme', theme);
+      try { localStorage.setItem('pinforge_theme', theme); } catch (e) {}
+
+      const sun = document.getElementById('themeIconSun');
+      const moon = document.getElementById('themeIconMoon');
+      if (theme === 'dark') {
+        sun.classList.remove('hidden');
+        moon.classList.add('hidden');
+      } else {
+        sun.classList.add('hidden');
+        moon.classList.remove('hidden');
+      }
+    }
+
+    function toggleTheme() {
+      applyTheme(state.theme === 'light' ? 'dark' : 'light');
+    }
+
+    function applyLanguage(lang) {
+      state.lang = lang;
+      document.documentElement.setAttribute('lang', lang);
+      try { localStorage.setItem('pinforge_lang', lang); } catch (e) {}
+
+      const t = I18N[lang];
+      document.title = t.pageTitle;
+
+      // Update RU / EN header indicator
+      const ruEl = document.getElementById('langRuLabel');
+      const enEl = document.getElementById('langEnLabel');
+      if (lang === 'ru') {
+        ruEl.style.color = 'var(--ink)';
+        ruEl.style.fontWeight = '600';
+        enEl.style.color = 'var(--ink-faint)';
+        enEl.style.fontWeight = '400';
+      } else {
+        enEl.style.color = 'var(--ink)';
+        enEl.style.fontWeight = '600';
+        ruEl.style.color = 'var(--ink-faint)';
+        ruEl.style.fontWeight = '400';
+      }
+
+      // Translate static nodes
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        const val = getPath(t, el.getAttribute('data-i18n'));
+        if (typeof val === 'string') el.textContent = val;
+      });
+
+      document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+        const val = getPath(t, el.getAttribute('data-i18n-placeholder'));
+        if (typeof val === 'string') el.setAttribute('placeholder', val);
+      });
+
+      // Rich H1 with editorial Cormorant Garamond italic accent
+      document.getElementById('heroHeadline').innerHTML = t.hero.headlineHtml;
+      document.getElementById('footerCopy').textContent = t.footer.copy;
+
+      // Re-render dynamic modules
+      renderCapabilities();
+      renderArchitecture();
+      renderPricing();
+      renderFaq();
+    }
+
+    function toggleLanguage() {
+      applyLanguage(state.lang === 'ru' ? 'en' : 'ru');
+    }
+
+    /* ========================================================================
+       6. SECTION 02: CAPABILITIES SPECIFICATION LEDGER
+       ======================================================================== */
+    function renderCapabilities() {
+      const items = I18N[state.lang].capabilities.items;
+      const container = document.getElementById('capabilitiesList');
+      if (!container) return;
+
+      container.innerHTML = items.map((item) => `
+        <div class="py-7 sm:py-8 hairline-b grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-10 items-baseline">
+          <div class="lg:col-span-5 flex items-baseline gap-5">
+            <span class="font-mono text-[12px] font-semibold text-crimson shrink-0">${item.num}</span>
+            <div>
+              <h3 class="font-semibold text-[18px] tracking-[-0.015em] text-ink">${item.title}</h3>
+              <div class="font-mono text-[10.5px] uppercase text-faint mt-1">${item.tag}</div>
+            </div>
+          </div>
+          <div class="lg:col-span-7 lg:pl-0 pl-9">
+            <p class="text-[15px] leading-[1.65] text-muted max-w-[640px]">${item.desc}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* ========================================================================
+       7. SECTION 03: 15-MODULE SYSTEM SPECIFICATION EXPLORER
+       ======================================================================== */
+    function getFilteredModules() {
+      const all = I18N[state.lang].arch.modules;
+      if (state.archFilter === 'all') return all;
+      return all.filter((m) => m.cat === state.archFilter);
+    }
+
+    function setArchFilter(filterId) {
+      state.archFilter = filterId;
+      const visible = getFilteredModules();
+      if (visible.length && !visible.some((m) => m.num === state.selectedModuleNum)) {
+        state.selectedModuleNum = visible[0].num;
+      }
+      renderArchitecture();
+    }
+
+    function selectModule(num) {
+      state.selectedModuleNum = num;
+      renderArchitecture();
+    }
+
+    function stepModule(delta) {
+      const visible = getFilteredModules();
+      const idx = visible.findIndex((m) => m.num === state.selectedModuleNum);
+      if (idx === -1) return;
+      const nextIdx = (idx + delta + visible.length) % visible.length;
+      state.selectedModuleNum = visible[nextIdx].num;
+      renderArchitecture();
+    }
+
+    function renderArchitecture() {
+      const arch = I18N[state.lang].arch;
+      const filterBar = document.getElementById('archFilterBar');
+      const listEl = document.getElementById('archModuleList');
+      const detailEl = document.getElementById('archDetailSheet');
+      const countEl = document.getElementById('archVisibleCount');
+      const posEl = document.getElementById('archPosIndicator');
+
+      if (!filterBar || !listEl || !detailEl) return;
+
+      // Render sharp hairline filter pills
+      filterBar.innerHTML = arch.filters.map((f) => {
+        const active = f.id === state.archFilter;
+        return `
+          <button type="button" role="tab" aria-selected="${active}" onclick="setArchFilter('${f.id}')"
+            class="px-3.5 py-2 rounded-[3px] font-mono text-[11.5px] font-medium transition-colors duration-150"
+            style="${active
+              ? 'background-color: var(--btn-bg); color: var(--btn-ink); border: 1px solid var(--btn-bg);'
+              : 'background-color: var(--bg-surface); color: var(--ink-muted); border: 1px solid var(--border);'}">
+            ${f.label}
+          </button>
+        `;
+      }).join('');
+
+      const visible = getFilteredModules();
+      if (!visible.some((m) => m.num === state.selectedModuleNum) && visible.length) {
+        state.selectedModuleNum = visible[0].num;
+      }
+
+      countEl.textContent = `${String(visible.length).padStart(2, '0')} / 15`;
+
+      // Render left clickable module list
+      listEl.innerHTML = visible.map((m) => {
+        const active = m.num === state.selectedModuleNum;
+        return `
+          <button type="button" onclick="selectModule('${m.num}')" data-active="${active}"
+            class="module-row w-full text-left px-5 py-3.5 flex items-baseline justify-between gap-4">
+            <div class="flex items-baseline gap-3.5 min-w-0">
+              <span class="font-mono text-[11.5px] font-semibold shrink-0" style="color: ${active ? 'var(--crimson)' : 'var(--ink-faint)'};">${m.num}</span>
+              <div class="min-w-0">
+                <div class="text-[14px] font-medium text-ink truncate">${m.title}</div>
+                <div class="text-[12px] text-muted truncate mt-0.5">${m.summary}</div>
+              </div>
+            </div>
+            <span class="font-mono text-[11px] shrink-0" style="color: ${active ? 'var(--ink)' : 'var(--ink-faint)'};">→</span>
+          </button>
+        `;
+      }).join('');
+
+      // Render right specification sheet
+      const activeMod = visible.find((m) => m.num === state.selectedModuleNum) || visible[0];
+      const activeIdx = visible.findIndex((m) => m.num === activeMod.num);
+      posEl.textContent = `${String(activeIdx + 1).padStart(2, '0')} / ${String(visible.length).padStart(2, '0')}`;
+
+      detailEl.innerHTML = `
+        <div class="pb-6 hairline-b mb-7">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div class="font-mono text-[11.5px] uppercase text-muted flex items-center gap-2">
+              <span class="text-crimson font-semibold">MODULE ${activeMod.num}</span>
+              <span>/</span>
+              <span>${activeMod.catLabel}</span>
+            </div>
+            <span class="font-mono text-[10.5px] uppercase px-2 py-0.5 hairline-all bg-page text-muted">SPEC · V1.0</span>
+          </div>
+          <h3 class="font-semibold text-[24px] sm:text-[28px] tracking-[-0.02em] text-ink">${activeMod.num} · ${activeMod.title}</h3>
+          <p class="text-[14.5px] text-muted mt-2">${activeMod.summary}</p>
+        </div>
+
+        <!-- Primary Path Block -->
+        <div class="mb-8">
+          <div class="font-mono text-[11.5px] uppercase font-semibold text-ink mb-4 flex items-center gap-2">
+            <span class="w-2 h-2 inline-block" style="background-color: var(--ink);"></span>
+            <span>${arch.mainPathTitle}</span>
+          </div>
+          <ul class="space-y-3">
+            ${activeMod.main.map((step, idx) => `
+              <li class="flex items-baseline gap-3.5 text-[14.5px] leading-[1.6] text-ink">
+                <span class="font-mono text-[11px] text-faint shrink-0">0${idx + 1}</span>
+                <span>${step}</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+
+        <!-- Error & Edge-Case Handling Block (Crimson accent markers) -->
+        <div class="p-5 hairline-all" style="background-color: var(--crimson-tint); border-color: var(--crimson-border);">
+          <div class="font-mono text-[11.5px] uppercase font-semibold mb-4 flex items-center gap-2" style="color: var(--crimson);">
+            <span class="w-2 h-2 rounded-full inline-block" style="background-color: var(--crimson);"></span>
+            <span>${arch.edgePathTitle}</span>
+          </div>
+          <ul class="space-y-3">
+            ${activeMod.edge.map((edgeItem) => `
+              <li class="flex items-baseline gap-3 text-[14px] leading-[1.6] text-ink">
+                <span class="font-mono text-[11px] font-semibold shrink-0" style="color: var(--crimson);">!</span>
+                <span>${edgeItem}</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    /* ========================================================================
+       8. SECTION 04: ELEVATED SAAS PRICING RENDERER
+       ======================================================================== */
+    function setBilling(mode) {
+      state.billing = mode;
+      renderPricing();
+    }
+
+    function renderPricing() {
+      const pText = I18N[state.lang].pricing;
+      const pNum = CONFIG.pricing[state.lang];
+
+      // Toggle styling
+      const monthlyBtn = document.getElementById('billMonthlyBtn');
+      const yearlyBtn = document.getElementById('billYearlyBtn');
+      if (state.billing === 'monthly') {
+        monthlyBtn.style.backgroundColor = 'var(--btn-bg)';
+        monthlyBtn.style.color = 'var(--btn-ink)';
+        yearlyBtn.style.backgroundColor = 'transparent';
+        yearlyBtn.style.color = 'var(--ink-muted)';
+      } else {
+        yearlyBtn.style.backgroundColor = 'var(--btn-bg)';
+        yearlyBtn.style.color = 'var(--btn-ink)';
+        monthlyBtn.style.backgroundColor = 'transparent';
+        monthlyBtn.style.color = 'var(--ink-muted)';
+      }
+
+      document.getElementById('pricingCurrencyNote').textContent = pText.currencyNote;
+
+      const grid = document.getElementById('pricingGrid');
+      if (!grid) return;
+
+      grid.innerHTML = pText.tiers.map((tier) => {
+        const key = tier.id.toLowerCase();
+        const monthlyPrice = pNum[key].monthly;
+        const yearlyPrice = pNum[key].yearly;
+        const shownPrice = state.billing === 'yearly' ? yearlyPrice : monthlyPrice;
+        const annualTotal = yearlyPrice * 12;
+
+        const priceFormatted = formatPrice(shownPrice, state.lang);
+        const billingCaption = state.billing === 'yearly'
+          ? pText.billedYearly(formatNumber(annualTotal, state.lang), pNum.currency)
+          : pText.billedMonthly;
+
+        const isPro = tier.featured;
+
+        return `
+          <div class="${isPro ? 'pricing-pro-col' : 'arch-cell-surface'} p-7 sm:p-9 flex flex-col justify-between gap-8">
+            <div>
+              <!-- Tier Header -->
+              <div class="flex items-center justify-between gap-3 pb-5 border-b ${isPro ? 'pricing-pro-divider' : 'border-[var(--border)]'}">
+                <h3 class="font-semibold text-[22px] tracking-[-0.02em]">${tier.name}</h3>
+                <span class="font-mono text-[10.5px] uppercase tracking-wider px-2 py-0.5 rounded-[2px] ${isPro ? 'text-crimson border border-[var(--crimson-border)]' : 'text-muted hairline-all'}">
+                  ${tier.tag}
+                </span>
+              </div>
+
+              <!-- Price Block -->
+              <div class="py-7 border-b ${isPro ? 'pricing-pro-divider' : 'border-[var(--border)]'}">
+                <div class="flex items-baseline gap-2">
+                  <span class="font-mono text-[34px] sm:text-[38px] font-semibold tracking-[-0.03em] leading-none">${priceFormatted}</span>
+                  <span class="font-mono text-[12px] ${isPro ? 'pricing-pro-muted' : 'text-muted'}">${pText.perMonth}</span>
+                </div>
+                <div class="font-mono text-[11.5px] mt-3 ${isPro ? 'pricing-pro-muted' : 'text-faint'}">
+                  ${billingCaption}
+                </div>
+                <p class="text-[14px] leading-[1.6] mt-4 ${isPro ? 'pricing-pro-muted' : 'text-muted'}">
+                  ${tier.desc}
+                </p>
+              </div>
+
+              <!-- Features -->
+              <ul class="pt-7 space-y-3.5">
+                ${tier.features.map((feat) => `
+                  <li class="flex items-baseline gap-3 text-[14px] leading-[1.5]">
+                    <span class="font-mono text-[12px] shrink-0" style="color: ${isPro ? 'var(--crimson)' : 'var(--ink-faint)'};">—</span>
+                    <span>${feat}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+
+            <!-- CTA Button (Opens Access Request Modal with Pre-selected Tier) -->
+            <div class="pt-2">
+              <button type="button" onclick="openAccessModal('${tier.id}')" class="w-full h-11 text-[13.5px] font-medium ${isPro ? 'btn-pro' : 'btn-hairline'}">
+                ${tier.cta}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* ========================================================================
+       9. SECTION 05: FAQ ACCORDION
+       ======================================================================== */
+    function renderFaq() {
+      const items = I18N[state.lang].faq.items;
+      const list = document.getElementById('faqList');
+      if (!list) return;
+
+      list.innerHTML = items.map((item, idx) => {
+        const isOpen = idx === state.openFaqIndex;
+        return `
+          <div class="faq-item hairline-b" data-open="${isOpen}">
+            <button type="button" onclick="toggleFaq(${idx})" aria-expanded="${isOpen}" class="w-full py-6 text-left flex items-baseline justify-between gap-6 group">
+              <div class="flex items-baseline gap-4 sm:gap-6">
+                <span class="font-mono text-[11.5px] text-faint shrink-0">0${idx + 1}</span>
+                <span class="font-medium text-[16px] sm:text-[17px] tracking-[-0.01em] text-ink group-hover:text-[var(--crimson)] transition-colors duration-150">${item.q}</span>
+              </div>
+              <span class="faq-plus font-mono text-[20px] leading-none text-muted shrink-0 select-none">+</span>
+            </button>
+            <div class="faq-body">
+              <div class="faq-inner">
+                <p class="pb-6 pl-8 sm:pl-11 pr-6 text-[14.5px] leading-[1.68] text-muted">${item.a}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleFaq(idx) {
+      state.openFaqIndex = state.openFaqIndex === idx ? -1 : idx;
+      renderFaq();
+    }
+
+    /* ========================================================================
+       10. WAITLIST MODAL & FORM SUBMISSION (Optional Webhook + Local Fallback)
+       ======================================================================== */
+    function openAccessModal(preselectedPlan) {
+      state.lastFocusedEl = document.activeElement;
+      const modal = document.getElementById('accessModal');
+      const planSelect = document.getElementById('modalPlan');
+      const feedback = document.getElementById('modalFeedback');
+
+      if (preselectedPlan && ['Creator', 'Pro', 'Studio'].includes(preselectedPlan)) {
+        planSelect.value = preselectedPlan;
+      } else {
+        planSelect.value = 'Pro';
+      }
+
+      feedback.classList.add('hidden');
+      feedback.textContent = '';
+
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+
+      setTimeout(() => {
+        document.getElementById('modalEmail').focus();
+      }, 30);
+    }
+
+    function closeAccessModal() {
+      const modal = document.getElementById('accessModal');
+      if (modal.classList.contains('hidden')) return;
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+      if (state.lastFocusedEl && typeof state.lastFocusedEl.focus === 'function') {
+        state.lastFocusedEl.focus();
+      }
+    }
+
+    async function handleWaitlistSubmit(event, source) {
+      event.preventDefault();
+      const t = I18N[state.lang].form;
+
+      const emailEl = document.getElementById(source === 'modal' ? 'modalEmail' : 'inlineEmail');
+      const planEl = document.getElementById(source === 'modal' ? 'modalPlan' : 'inlinePlan');
+      const nameEl = source === 'modal' ? document.getElementById('modalName') : null;
+      const submitBtn = document.getElementById(source === 'modal' ? 'modalSubmitBtn' : 'inlineSubmitBtn');
+      const feedbackEl = document.getElementById(source === 'modal' ? 'modalFeedback' : 'inlineFeedback');
+
+      const email = (emailEl.value || '').trim();
+      const plan = planEl.value;
+      const name = nameEl ? (nameEl.value || '').trim() : '';
+
+      const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (!emailValid) {
+        feedbackEl.classList.remove('hidden');
+        feedbackEl.style.color = 'var(--crimson)';
+        feedbackEl.textContent = t.errorEmail;
+        emailEl.focus();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = t.submitting;
+
+      // Optional webhook / Formspree submission with graceful local fallback
+      if (CONFIG.waitlistEndpoint) {
+        try {
+          await fetch(CONFIG.waitlistEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({
+              brand: CONFIG.brandName,
+              email,
+              name,
+              plan,
+              billing: state.billing,
+              language: state.lang,
+              submittedAt: new Date().toISOString(),
+            }),
+          });
+        } catch (err) {
+          // Graceful fallback: confirm locally even if offline or endpoint unreachable
+        }
+      }
+
+      // Persist locally for convenience
+      try {
+        localStorage.setItem('pinforge_waitlist_last', JSON.stringify({ email, plan, ts: Date.now() }));
+      } catch (e) {}
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = t.submit;
+
+      feedbackEl.classList.remove('hidden');
+      feedbackEl.style.color = 'var(--ink)';
+      feedbackEl.textContent = t.success(plan);
+
+      emailEl.value = '';
+      if (nameEl) nameEl.value = '';
+    }
+
+    /* ========================================================================
+       11. MOBILE NAVIGATION DRAWER
+       ======================================================================== */
+    function toggleMobileMenu(force) {
+      const drawer = document.getElementById('mobileMenu');
+      const btn = document.getElementById('mobileMenuBtn');
+      const iconOpen = document.getElementById('menuIconOpen');
+      const iconClose = document.getElementById('menuIconClose');
+
+      const shouldOpen = force !== undefined ? force : drawer.classList.contains('hidden');
+      drawer.classList.toggle('hidden', !shouldOpen);
+      iconOpen.classList.toggle('hidden', shouldOpen);
+      iconClose.classList.toggle('hidden', !shouldOpen);
+      btn.setAttribute('aria-expanded', String(shouldOpen));
+    }
+
+    /* ========================================================================
+       12. BOOTSTRAP & EVENT WIRING
+       ======================================================================== */
+    document.addEventListener('DOMContentLoaded', () => {
+      // Populate CONFIG values into DOM
+      document.querySelectorAll('.brand-name').forEach((el) => {
+        el.textContent = CONFIG.brandName;
+      });
+      const ghLink = document.getElementById('footerGithub');
+      if (ghLink) ghLink.href = CONFIG.githubUrl;
+
+      const emailLink = document.getElementById('footerEmail');
+      if (emailLink) {
+        emailLink.href = `mailto:${CONFIG.contactEmail}`;
+        emailLink.textContent = CONFIG.contactEmail;
+      }
+
+      // Bind header toggles
+      document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+      document.getElementById('langToggle').addEventListener('click', toggleLanguage);
+      document.getElementById('mobileMenuBtn').addEventListener('click', () => toggleMobileMenu());
+      document.querySelectorAll('.mobile-link').forEach((a) => {
+        a.addEventListener('click', () => toggleMobileMenu(false));
+      });
+
+      // Modal backdrop click & Escape key
+      document.getElementById('accessModal').addEventListener('click', (e) => {
+        if (e.target.id === 'accessModal') closeAccessModal();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeAccessModal();
+          toggleMobileMenu(false);
+        }
+      });
+
+      // Restore persisted theme & language (defaults: Light theme, Russian language)
+      let savedTheme = 'light';
+      let savedLang = 'ru';
+      try {
+        const storedTheme = localStorage.getItem('pinforge_theme');
+        if (storedTheme === 'dark' || storedTheme === 'light') savedTheme = storedTheme;
+        const storedLang = localStorage.getItem('pinforge_lang');
+        if (storedLang === 'ru' || storedLang === 'en') savedLang = storedLang;
+      } catch (e) {}
+
+      applyTheme(savedTheme);
+      applyLanguage(savedLang);
+    });
+  </script>
+</body>
+</html>
